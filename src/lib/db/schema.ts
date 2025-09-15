@@ -22,6 +22,18 @@ export const profiles = pgTable('profiles', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+export const foodLogs = pgTable('food_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(), // References auth.users.id
+  mealType: text('meal_type').notNull(),
+  foodName: text('food_name').notNull(),
+  calories: numeric('calories', { precision: 8, scale: 2 }).notNull(),
+  protein: numeric('protein', { precision: 8, scale: 2 }).default('0'),
+  carbs: numeric('carbs', { precision: 8, scale: 2 }).default('0'),
+  fats: numeric('fats', { precision: 8, scale: 2 }).default('0'),
+  loggedAt: timestamp('logged_at').defaultNow().notNull(),
+})
+
 // Zod schemas for validation
 export const insertProfileSchema = createInsertSchema(profiles, {
   name: z.string().min(1, 'Name is required').max(100),
@@ -106,3 +118,49 @@ export type SignupData = z.infer<typeof signupSchema>
 
 // Complete onboarding data combining all steps
 export type CompleteOnboardingData = PersonalData & Goals & ActivityLevel & Measurements & Omit<SignupData, 'confirmPassword'>
+
+// Food logs schemas
+export const insertFoodLogSchema = createInsertSchema(foodLogs, {
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  foodName: z.string().min(1, 'Food name is required').max(100),
+  calories: z.string().transform(Number).pipe(
+    z.number().min(0, 'Calories must be 0 or greater').max(10000, 'Calories must be realistic')
+  ),
+  protein: z.string().transform(Number).pipe(
+    z.number().min(0, 'Protein must be 0 or greater').max(1000, 'Protein must be realistic')
+  ).optional(),
+  carbs: z.string().transform(Number).pipe(
+    z.number().min(0, 'Carbs must be 0 or greater').max(1000, 'Carbs must be realistic')
+  ).optional(),
+  fats: z.string().transform(Number).pipe(
+    z.number().min(0, 'Fats must be 0 or greater').max(1000, 'Fats must be realistic')
+  ).optional(),
+}).omit({
+  id: true,
+  userId: true,
+  loggedAt: true,
+})
+
+// Form input schema (for React Hook Form)
+export const foodLogFormSchema = z.object({
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  foodName: z.string().min(1, 'Food name is required').max(100),
+  calories: z.string().min(1, 'Calories is required'),
+  protein: z.string().optional(),
+  carbs: z.string().optional(),
+  fats: z.string().optional(),
+})
+
+export const selectFoodLogSchema = createSelectSchema(foodLogs)
+
+// Type exports for food logs
+export type FoodLog = Omit<typeof foodLogs.$inferSelect, 'loggedAt'> & {
+  loggedAt: string // Database returns string
+}
+export type NewFoodLog = typeof foodLogs.$inferInsert
+export type FoodLogInput = z.infer<typeof insertFoodLogSchema>
+export type FoodLogFormInput = z.infer<typeof foodLogFormSchema>
+
+// Meal type enum
+export const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'] as const
+export type MealType = typeof mealTypes[number]

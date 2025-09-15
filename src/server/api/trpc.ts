@@ -3,6 +3,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, profiles, insertProfileSchema, type OnboardingData } from "@/lib/db";
 import { createClient } from "@/utils/supabase/server";
+import { foodRouter } from "./routers/food";
 
 const t = initTRPC.create();
 
@@ -156,6 +157,9 @@ export const appRouter = t.router({
         }
       }),
   }),
+
+  // Food logging router
+  food: foodRouter,
 });
 
 export type AppRouter = typeof appRouter;
