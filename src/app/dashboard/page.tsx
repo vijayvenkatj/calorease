@@ -7,6 +7,7 @@ import FoodLogger from '@/components/food/FoodLogger'
 import FoodLogList from '@/components/food/FoodLogList'
 import NutritionSummary from '@/components/food/NutritionSummary'
 import ImageFoodLogger from '@/components/food/ImageFoodLogger' // new component
+import WaterIntakeCard from '@/components/WaterIntakeCard'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -25,6 +26,10 @@ export default async function DashboardPage() {
     await supabase.auth.signOut()
     redirect('/auth/login')
   }
+
+  // Water intake demo values (replace with dynamic data)
+  const waterCurrentMl = 1800
+  const waterGoalMl = 2500
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -92,7 +97,10 @@ export default async function DashboardPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Water Intake */}
+            <WaterIntakeCard currentMl={waterCurrentMl} goalMl={waterGoalMl} />
+
             <Card>
               <CardHeader>
                 <CardTitle>Weekly Progress</CardTitle>
