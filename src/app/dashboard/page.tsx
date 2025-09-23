@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import FoodLogger from '@/components/food/FoodLogger'
 import FoodLogList from '@/components/food/FoodLogList'
 import NutritionSummary from '@/components/food/NutritionSummary'
+import ImageFoodLogger from '@/components/food/ImageFoodLogger' // new component
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -64,28 +65,27 @@ export default async function DashboardPage() {
           {/* Nutrition Summary */}
           <NutritionSummary />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-[600px]">
             {/* Food Logger */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-8">
-                <FoodLogger />
-              </div>
+            <div className="lg:col-span-1 space-y-6 sticky top-8">
+              <FoodLogger />
+              <ImageFoodLogger /> {/* new upload-by-photo option */}
             </div>
 
             {/* Food Log List */}
-            <div className="lg:col-span-2">
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Today's Food Log</h3>
-                  <p className="text-sm text-gray-600">
-                    {new Date().toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                </div>
+            <div className="lg:col-span-2 flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Today's Food Log</h3>
+                <p className="text-sm text-gray-600">
+                  {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              </div>
+              <div className="flex-1 min-h-0">
                 <FoodLogList />
               </div>
             </div>
