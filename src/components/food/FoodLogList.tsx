@@ -68,9 +68,9 @@ export default function FoodLogList({ date }: FoodLogListProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="h-full flex flex-col space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="animate-pulse flex-1">
             <CardContent className="p-4">
               <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
               <div className="h-3 bg-gray-200 rounded w-3/4"></div>
@@ -93,7 +93,7 @@ export default function FoodLogList({ date }: FoodLogListProps) {
 
   if (logs.length === 0) {
     return (
-      <Card className="border-gray-200">
+      <Card className="border-gray-200 h-full flex items-center justify-center">
         <CardContent className="p-8 text-center">
           <div className="text-gray-400 mb-2">🍽️</div>
           <p className="text-gray-600 text-sm">No food logs for today yet.</p>
@@ -104,7 +104,7 @@ export default function FoodLogList({ date }: FoodLogListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col space-y-6">
       {mealTypes.map((mealType) => {
         const mealLogs = groupedLogs[mealType] || []
         
@@ -114,7 +114,7 @@ export default function FoodLogList({ date }: FoodLogListProps) {
         const mealProtein = mealLogs.reduce((sum, log) => sum + Number(log.protein || 0), 0)
 
         return (
-          <Card key={mealType} className="border border-gray-200">
+          <Card key={mealType} className="border border-gray-200 flex-1">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -131,7 +131,7 @@ export default function FoodLogList({ date }: FoodLogListProps) {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-0 flex-1">
               <div className="space-y-3">
                 {mealLogs.map((log) => (
                   <div

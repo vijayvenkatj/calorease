@@ -98,7 +98,7 @@ export default function NutritionSummary({ date }: NutritionSummaryProps) {
             return (
               <div key={nutrient.label} className="text-center">
                 <div className="mb-2">
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold dark:text-white text-gray-900">
                     {nutrient.value}
                   </div>
                   <div className="text-xs text-gray-500">

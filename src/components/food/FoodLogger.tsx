@@ -19,7 +19,6 @@ interface FoodLoggerProps {
 }
 
 export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerProps) {
-  const [isOpen, setIsOpen] = useState(false)
 
   const form = useForm<FoodLogFormInput>({
     resolver: zodResolver(foodLogFormSchema),
@@ -39,7 +38,7 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
     onSuccess: () => {
       toast.success('Food logged successfully!')
       form.reset()
-      setIsOpen(false)
+      // Keep the card open - don't call setIsOpen(false)
       onSuccess?.()
       // Invalidate and refetch food logs
       utils.food.getLogs.invalidate()
@@ -61,18 +60,6 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
       fats: data.fats || '0',
     }
     addLogMutation.mutate(payload)
-  }
-
-  if (!isOpen) {
-    return (
-      <Button 
-        onClick={() => setIsOpen(true)}
-        className="w-full bg-green-600 hover:bg-green-700"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Log Food
-      </Button>
-    )
   }
 
   return (
@@ -214,13 +201,10 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setIsOpen(false)
-                  form.reset()
-                }}
+                onClick={() => form.reset()}
                 className="flex-1"
               >
-                Cancel
+                Clear
               </Button>
               <Button
                 type="submit"
