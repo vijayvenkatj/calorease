@@ -30,8 +30,8 @@ export default function MacroPieChart({ carbs, protein, fats }: MacroPieChartPro
   return (
     <Card className="rounded-2xl border border-black/5 dark:border-white/15 bg-white dark:bg-black text-inherit shadow-sm hover:shadow-md transition-shadow">
       <CardHeader>
-        <CardTitle className="text-base text-white">Macronutrient Breakdown</CardTitle>
-        <CardDescription className="text-gray-300">Today’s distribution of carbs, protein, and fats</CardDescription>
+        <CardTitle className="text-base text-black dark:text-white">Macronutrient Breakdown</CardTitle>
+        <CardDescription className="text-gray-500">Today’s distribution of carbs, protein, and fats</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-64">

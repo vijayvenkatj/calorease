@@ -129,21 +129,19 @@ export default async function NutritionPage() {
                   ))}
                 </div>
               </section>
-
-              <section>
-                <TipsCard tips={dailyTips} />
-              </section>
             </div>
 
             <div className="lg:col-span-1 space-y-8 sticky top-16 z-10 self-start">
               <section>
                 <MacroPieChartContainer />
               </section>
-
-              <section>
-                <NutritionFactCard fact={funFact} />
-              </section>
             </div>
+          </div>
+
+          {/* Bottom row: Tips and Fact side-by-side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <TipsCard tips={dailyTips} />
+            <NutritionFactCard fact={funFact} />
           </div>
         </div>
       </main>

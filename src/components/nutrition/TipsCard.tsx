@@ -12,7 +12,7 @@ export default function TipsCard({ tips }: TipsCardProps) {
         <CardTitle className="flex items-center gap-2 text-base text-white">
           <Lightbulb className="h-5 w-5 text-amber-500" /> Daily Tips
         </CardTitle>
-        <CardDescription className="text-gray-300">Personalized recommendations for today</CardDescription>
+        <CardDescription className="text-gray-500">Personalized recommendations for today</CardDescription>
       </CardHeader>
       <CardContent>
         <ul className="space-y-3">
