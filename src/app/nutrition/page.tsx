@@ -81,14 +81,9 @@ export default async function NutritionPage() {
               <div className="p-2 bg-green-500 rounded-full">
                 <Leaf className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">CalorEase</h1>
-              <Link
-                href="/dashboard"
-                aria-label="Go to Dashboard"
-                className="ml-4 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 underline underline-offset-4 decoration-emerald-600/60 hover:text-gray-900 hover:bg-black/5 dark:text-gray-200 dark:decoration-emerald-400/60 dark:hover:text-white dark:hover:bg-white/5 transition-colors"
-              >
-                Dashboard
-              </Link>
+              <Link href="/dashboard" aria-label="Go to Dashboard" className="text-xl font-bold text-gray-900 dark:text-white">CalorEase</Link>
+              <Link href="/nutrition" aria-label="Go to Nutrition" className="ml-4 inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700  hover:text-gray-900 hover:bg-black/5 dark:text-gray-200 dark:hover:text-white dark:hover:bg-white/5 transition-colors">Nutrition</Link>
+              <Link href="/analytics" aria-label="Go to Analytics" className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-black/5 dark:text-gray-200 underline underline-offset-4 decoration-emerald-600/60 dark:decoration-emerald-400/60 dark:hover:text-white dark:hover:bg-white/5 transition-colors">Analytics</Link>
             </div>
             <div className="flex items-center gap-4">
               <ThemeToggle />
