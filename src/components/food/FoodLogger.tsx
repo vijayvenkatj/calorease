@@ -1,15 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { foodLogFormSchema, insertFoodLogSchema, type FoodLogFormInput, type MealType, mealTypes } from '@/lib/db/schema'
+import { foodLogFormSchema, type FoodLogFormInput, type MealType, mealTypes } from '@/lib/db/schema'
 import { trpc } from '@/utils/trpc'
 import { toast } from 'sonner'
 
@@ -19,7 +17,6 @@ interface FoodLoggerProps {
 }
 
 export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerProps) {
-
   const form = useForm<FoodLogFormInput>({
     resolver: zodResolver(foodLogFormSchema),
     defaultValues: {
@@ -38,11 +35,11 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
     onSuccess: () => {
       toast.success('Food logged successfully!')
       form.reset()
-      // Keep the card open - don't call setIsOpen(false)
       onSuccess?.()
-      // Invalidate and refetch food logs
       utils.food.getLogs.invalidate()
       utils.food.getDailySummary.invalidate()
+      utils.streak.getStreak.invalidate()
+      utils.progress.getWeeklyProgress.invalidate()
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to log food')
@@ -50,7 +47,6 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
   })
 
   const onSubmit = (data: FoodLogFormInput) => {
-    // Transform form data to API format
     const payload = {
       mealType: data.mealType,
       foodName: data.foodName,
@@ -63,9 +59,12 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
   }
 
   return (
-    <Card className="border border-gray-200 shadow-sm">
+    <Card className="border-border">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Log Food</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Plus className="h-5 w-5" />
+          Log Food
+        </CardTitle>
         <CardDescription>
           Add a meal or snack to your daily log
         </CardDescription>
@@ -73,81 +72,80 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="mealType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Meal Type</FormLabel>
-                    <FormControl>
-                      <select
-                        {...field}
-                        className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        {mealTypes.map((mealType) => (
-                          <option key={mealType} value={mealType}>
-                            {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="mealType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meal Type</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    >
+                      {mealTypes.map((mealType) => (
+                        <option key={mealType} value={mealType}>
+                          {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="foodName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Food Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Chicken Breast"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="foodName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Food Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Chicken Breast"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <FormField
-                control={form.control}
-                name="calories"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Calories *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="250"
-                        step="0.1"
-                        min="0"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="calories"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Calories *</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="250"
+                      step="0.1"
+                      min="0"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <div className="grid grid-cols-3 gap-3">
               <FormField
                 control={form.control}
                 name="protein"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Protein (g)</FormLabel>
+                    <FormLabel className="text-xs">Protein (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="25"
                         step="0.1"
                         min="0"
+                        className="h-9"
                         {...field}
                       />
                     </FormControl>
@@ -161,13 +159,14 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
                 name="carbs"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Carbs (g)</FormLabel>
+                    <FormLabel className="text-xs">Carbs (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="15"
                         step="0.1"
                         min="0"
+                        className="h-9"
                         {...field}
                       />
                     </FormControl>
@@ -181,13 +180,14 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
                 name="fats"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fats (g)</FormLabel>
+                    <FormLabel className="text-xs">Fats (g)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         placeholder="8"
                         step="0.1"
                         min="0"
+                        className="h-9"
                         {...field}
                       />
                     </FormControl>
@@ -197,23 +197,13 @@ export default function FoodLogger({ onSuccess, defaultMealType }: FoodLoggerPro
               />
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => form.reset()}
-                className="flex-1"
-              >
-                Clear
-              </Button>
-              <Button
-                type="submit"
-                disabled={addLogMutation.isPending}
-                className="flex-1 bg-green-600 hover:bg-green-700"
-              >
-                {addLogMutation.isPending ? 'Logging...' : 'Log Food'}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              disabled={addLogMutation.isPending}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+            >
+              {addLogMutation.isPending ? 'Logging...' : 'Log Food'}
+            </Button>
           </form>
         </Form>
       </CardContent>

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { trpc } from '@/utils/trpc'
+import { Activity } from 'lucide-react'
 
 interface NutritionSummaryProps {
   date?: string // YYYY-MM-DD format
@@ -15,17 +16,17 @@ export default function NutritionSummary({ date }: NutritionSummaryProps) {
 
   if (isLoading) {
     return (
-      <Card className="animate-pulse">
+      <Card className="border-border">
         <CardHeader>
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-6 bg-muted rounded w-1/3 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-1/2 animate-pulse mt-2"></div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="text-center">
-                <div className="h-8 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-3/4 mx-auto"></div>
+              <div key={i} className="space-y-2">
+                <div className="h-10 bg-muted rounded animate-pulse"></div>
+                <div className="h-3 bg-muted rounded w-3/4 animate-pulse"></div>
               </div>
             ))}
           </div>
@@ -36,9 +37,9 @@ export default function NutritionSummary({ date }: NutritionSummaryProps) {
 
   if (error) {
     return (
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-destructive/50 bg-destructive/5">
         <CardContent className="p-4">
-          <p className="text-red-600 text-sm">Failed to load nutrition summary</p>
+          <p className="text-destructive text-sm">Failed to load nutrition summary</p>
         </CardContent>
       </Card>
     )
@@ -51,83 +52,92 @@ export default function NutritionSummary({ date }: NutritionSummaryProps) {
       label: 'Calories',
       value: Math.round(summary.totalCalories),
       unit: 'cal',
-      color: 'bg-blue-500',
-      goal: 2000, // This could be dynamic based on user profile
+      bgColor: 'bg-blue-500',
+      lightBg: 'bg-blue-100 dark:bg-blue-900/30',
+      textColor: 'text-blue-600 dark:text-blue-400',
+      goal: 2000,
     },
     {
       label: 'Protein',
       value: Math.round(summary.totalProtein),
       unit: 'g',
-      color: 'bg-red-500',
+      bgColor: 'bg-rose-500',
+      lightBg: 'bg-rose-100 dark:bg-rose-900/30',
+      textColor: 'text-rose-600 dark:text-rose-400',
       goal: 150,
     },
     {
       label: 'Carbs',
       value: Math.round(summary.totalCarbs),
       unit: 'g',
-      color: 'bg-yellow-500',
+      bgColor: 'bg-amber-500',
+      lightBg: 'bg-amber-100 dark:bg-amber-900/30',
+      textColor: 'text-amber-600 dark:text-amber-400',
       goal: 250,
     },
     {
       label: 'Fats',
       value: Math.round(summary.totalFats),
       unit: 'g',
-      color: 'bg-purple-500',
+      bgColor: 'bg-violet-500',
+      lightBg: 'bg-violet-100 dark:bg-violet-900/30',
+      textColor: 'text-violet-600 dark:text-violet-400',
       goal: 70,
     },
   ]
 
   return (
-    <Card className="border border-gray-200">
+    <Card className="border-border">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Today's Nutrition</span>
-          <Badge variant="outline" className="text-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            <CardTitle>Today's Nutrition</CardTitle>
+          </div>
+          <Badge variant="secondary" className="text-xs font-normal">
             {summary.logCount} {summary.logCount === 1 ? 'entry' : 'entries'}
           </Badge>
-        </CardTitle>
+        </div>
         <CardDescription>
           Your daily nutrition summary
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {nutrients.map((nutrient) => {
-            const percentage = Math.min((nutrient.value / nutrient.goal) * 100, 100)
-            
-            return (
-              <div key={nutrient.label} className="text-center">
-                <div className="mb-2">
-                  <div className="text-2xl font-bold dark:text-white text-gray-900">
-                    {nutrient.value}
+        {summary.totalCalories === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground text-sm">Start logging your meals to see your nutrition summary!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {nutrients.map((nutrient) => {
+              const percentage = Math.min((nutrient.value / nutrient.goal) * 100, 100)
+              
+              return (
+                <div key={nutrient.label} className="space-y-2">
+                  <div className={`p-3 rounded-lg ${nutrient.lightBg}`}>
+                    <div className={`text-2xl font-bold ${nutrient.textColor}`}>
+                      {nutrient.value}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      of {nutrient.goal} {nutrient.unit}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {nutrient.unit} / {nutrient.goal} {nutrient.unit}
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-sm font-medium">{nutrient.label}</div>
+                      <div className="text-xs text-muted-foreground">{Math.round(percentage)}%</div>
+                    </div>
+                    <div className="w-full bg-secondary rounded-full h-1.5">
+                      <div
+                        className={`h-1.5 rounded-full transition-all duration-300 ${nutrient.bgColor}`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                  <div
-                    className={`h-2 rounded-full transition-all duration-300 ${nutrient.color}`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-                
-                <div className="text-xs font-medium text-gray-700">
-                  {nutrient.label}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {Math.round(percentage)}%
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {summary.totalCalories === 0 && (
-          <div className="text-center py-4">
-            <p className="text-gray-500 text-sm">Start logging your meals to see your nutrition summary!</p>
+              )
+            })}
           </div>
         )}
       </CardContent>

@@ -4,6 +4,10 @@ import { eq } from "drizzle-orm";
 import { db, profiles, insertProfileSchema, type OnboardingData } from "@/lib/db";
 import { createClient } from "@/utils/supabase/server";
 import { foodRouter } from "./routers/food";
+import { waterRouter } from "./routers/water";
+import { streakRouter } from "./routers/streak";
+import { progressRouter } from "./routers/progress";
+import { analyticsRouter } from "./routers/analytics";
 
 const t = initTRPC.create();
 
@@ -62,6 +66,37 @@ export const appRouter = t.router({
         }
       }),
 
+    // Get current user's profile
+    getMyProfile: t.procedure
+      .query(async () => {
+        try {
+          const supabase = await createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+
+          if (!user) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
+          }
+
+          const profile = await db.query.profiles.findFirst({
+            where: (profiles, { eq }) => eq(profiles.id, user.id),
+          });
+
+          return profile;
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          if (error instanceof TRPCError) {
+            throw error;
+          }
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to fetch profile',
+          });
+        }
+      }),
+
     // Update profile
     updateProfile: t.procedure
       .input(insertProfileSchema.extend({
@@ -83,6 +118,50 @@ export const appRouter = t.router({
           return updatedProfile;
         } catch (error) {
           console.error('Error updating profile:', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to update profile',
+          });
+        }
+      }),
+
+    // Update current user's profile
+    updateMyProfile: t.procedure
+      .input(insertProfileSchema)
+      .mutation(async ({ input }) => {
+        try {
+          const supabase = await createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+
+          if (!user) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
+          }
+
+          const [updatedProfile] = await db
+            .update(profiles)
+            .set({
+              ...input,
+              updatedAt: new Date(),
+            })
+            .where(eq(profiles.id, user.id))
+            .returning();
+
+          if (!updatedProfile) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Profile not found',
+            });
+          }
+
+          return updatedProfile;
+        } catch (error) {
+          console.error('Error updating profile:', error);
+          if (error instanceof TRPCError) {
+            throw error;
+          }
           throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message: 'Failed to update profile',
@@ -160,6 +239,18 @@ export const appRouter = t.router({
 
   // Food logging router
   food: foodRouter,
+
+  // Water intake router
+  water: waterRouter,
+
+  // Streak tracking router
+  streak: streakRouter,
+
+  // Weekly progress router
+  progress: progressRouter,
+
+  // Analytics router (weight tracking and calculations)
+  analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

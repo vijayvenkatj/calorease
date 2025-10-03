@@ -1,10 +1,179 @@
 import { z } from 'zod'
-import { and, desc, eq, gte, lt } from 'drizzle-orm'
+import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, foodLogs, insertFoodLogSchema } from '@/lib/db'
+import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
 
 const t = initTRPC.create()
+
+// Helper function to get Monday of the week for a given date
+function getMondayOfWeek(date: Date): string {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString().split('T')[0]
+}
+
+// Helper function to update user streak after adding a food log
+async function updateUserStreak(userId: string) {
+  // Get all unique dates with food logs for this user, sorted descending
+  const logs = await db
+    .select({
+      date: sql<string>`DATE(${foodLogs.loggedAt})`,
+    })
+    .from(foodLogs)
+    .where(eq(foodLogs.userId, userId))
+    .groupBy(sql`DATE(${foodLogs.loggedAt})`)
+    .orderBy(desc(sql`DATE(${foodLogs.loggedAt})`))
+
+  if (logs.length === 0) return
+
+  const dates = logs.map(log => log.date)
+  const lastLogDate = dates[0]
+  
+  let currentStreak = 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  
+  const lastLog = new Date(lastLogDate)
+  lastLog.setHours(0, 0, 0, 0)
+  
+  if (lastLog.getTime() === today.getTime() || lastLog.getTime() === yesterday.getTime()) {
+    let checkDate = new Date(lastLog)
+    
+    for (const dateStr of dates) {
+      const logDate = new Date(dateStr)
+      logDate.setHours(0, 0, 0, 0)
+      
+      if (logDate.getTime() === checkDate.getTime()) {
+        currentStreak++
+        checkDate.setDate(checkDate.getDate() - 1)
+      } else if (logDate.getTime() < checkDate.getTime()) {
+        break
+      }
+    }
+  }
+  
+  let longestStreak = 0
+  let tempStreak = 1
+  
+  for (let i = 0; i < dates.length - 1; i++) {
+    const currentDate = new Date(dates[i])
+    const nextDate = new Date(dates[i + 1])
+    
+    currentDate.setHours(0, 0, 0, 0)
+    nextDate.setHours(0, 0, 0, 0)
+    
+    const dayDiff = Math.floor((currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24))
+    
+    if (dayDiff === 1) {
+      tempStreak++
+    } else {
+      longestStreak = Math.max(longestStreak, tempStreak)
+      tempStreak = 1
+    }
+  }
+  
+  longestStreak = Math.max(longestStreak, tempStreak, currentStreak)
+
+  const existingStreak = await db
+    .select()
+    .from(userStreaks)
+    .where(eq(userStreaks.userId, userId))
+    .limit(1)
+
+  if (existingStreak.length === 0) {
+    await db.insert(userStreaks).values({
+      userId,
+      currentStreak,
+      longestStreak,
+      lastLogDate,
+    })
+  } else {
+    await db
+      .update(userStreaks)
+      .set({
+        currentStreak,
+        longestStreak,
+        lastLogDate,
+        updatedAt: new Date(),
+      })
+      .where(eq(userStreaks.userId, userId))
+  }
+}
+
+// Helper function to update weekly progress after adding a food log
+async function updateWeeklyProgressForUser(userId: string, weekStartDate: string) {
+  const weekStart = new Date(weekStartDate)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 7)
+
+  const logs = await db
+    .select()
+    .from(foodLogs)
+    .where(and(
+      eq(foodLogs.userId, userId),
+      gte(foodLogs.loggedAt, weekStart),
+      lt(foodLogs.loggedAt, weekEnd)
+    ))
+
+  const uniqueDates = new Set(
+    logs.map(log => new Date(log.loggedAt).toISOString().split('T')[0])
+  )
+  const daysLogged = uniqueDates.size
+
+  const totals = logs.reduce(
+    (acc, log) => ({
+      totalCalories: acc.totalCalories + Number(log.calories || 0),
+      totalProtein: acc.totalProtein + Number(log.protein || 0),
+      totalCarbs: acc.totalCarbs + Number(log.carbs || 0),
+      totalFats: acc.totalFats + Number(log.fats || 0),
+    }),
+    { totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFats: 0 }
+  )
+
+  const existingProgress = await db
+    .select()
+    .from(weeklyProgress)
+    .where(and(
+      eq(weeklyProgress.userId, userId),
+      eq(weeklyProgress.weekStartDate, weekStartDate)
+    ))
+    .limit(1)
+
+  if (existingProgress.length === 0) {
+    await db.insert(weeklyProgress).values({
+      userId,
+      weekStartDate,
+      daysLogged,
+      totalCalories: String(totals.totalCalories),
+      totalProtein: String(totals.totalProtein),
+      totalCarbs: String(totals.totalCarbs),
+      totalFats: String(totals.totalFats),
+      totalWaterMl: 0,
+    })
+  } else {
+    await db
+      .update(weeklyProgress)
+      .set({
+        daysLogged,
+        totalCalories: String(totals.totalCalories),
+        totalProtein: String(totals.totalProtein),
+        totalCarbs: String(totals.totalCarbs),
+        totalFats: String(totals.totalFats),
+        updatedAt: new Date(),
+      })
+      .where(and(
+        eq(weeklyProgress.userId, userId),
+        eq(weeklyProgress.weekStartDate, weekStartDate)
+      ))
+  }
+}
 
 export const foodRouter = t.router({
   // Get food logs for current user (optionally filter by date)
@@ -87,6 +256,13 @@ export const foodRouter = t.router({
           })
           .returning()
 
+        // Update streak and weekly progress asynchronously
+        const weekStartDate = getMondayOfWeek(new Date())
+        await Promise.all([
+          updateUserStreak(user.id),
+          updateWeeklyProgressForUser(user.id, weekStartDate),
+        ])
+
         return newLog
       } catch (error) {
         console.error('Error adding food log:', error)
@@ -150,6 +326,10 @@ export const foodRouter = t.router({
           .where(eq(foodLogs.id, input.id))
           .returning()
 
+        // Update weekly progress after modification
+        const weekStartDate = getMondayOfWeek(new Date())
+        await updateWeeklyProgressForUser(user.id, weekStartDate)
+
         return updatedLog
       } catch (error) {
         console.error('Error updating food log:', error)
@@ -197,6 +377,13 @@ export const foodRouter = t.router({
             message: 'Food log not found',
           })
         }
+
+        // Update streak and weekly progress after deletion
+        const weekStartDate = getMondayOfWeek(new Date())
+        await Promise.all([
+          updateUserStreak(user.id),
+          updateWeeklyProgressForUser(user.id, weekStartDate),
+        ])
 
         return { success: true, deletedLog }
       } catch (error) {

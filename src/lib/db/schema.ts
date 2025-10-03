@@ -47,18 +47,26 @@ export const insertProfileSchema = createInsertSchema(profiles, {
   ),
   goals: z.enum(['lose_weight', 'gain_muscle', 'maintain_weight', 'improve_health', 'increase_strength']),
   activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active']),
-  waist: z.string().optional().transform((val) => val ? Number(val) : undefined).pipe(
-    z.number().min(40).max(200).optional()
-  ),
-  hips: z.string().optional().transform((val) => val ? Number(val) : undefined).pipe(
-    z.number().min(40).max(200).optional()
-  ),
-  chest: z.string().optional().transform((val) => val ? Number(val) : undefined).pipe(
-    z.number().min(40).max(200).optional()
-  ),
-  arms: z.string().optional().transform((val) => val ? Number(val) : undefined).pipe(
-    z.number().min(15).max(100).optional()
-  ),
+  waist: z.union([
+    z.string().transform(Number).pipe(z.number().min(40).max(200)),
+    z.literal('').transform(() => undefined),
+    z.undefined()
+  ]).optional(),
+  hips: z.union([
+    z.string().transform(Number).pipe(z.number().min(40).max(200)),
+    z.literal('').transform(() => undefined),
+    z.undefined()
+  ]).optional(),
+  chest: z.union([
+    z.string().transform(Number).pipe(z.number().min(40).max(200)),
+    z.literal('').transform(() => undefined),
+    z.undefined()
+  ]).optional(),
+  arms: z.union([
+    z.string().transform(Number).pipe(z.number().min(15).max(100)),
+    z.literal('').transform(() => undefined),
+    z.undefined()
+  ]).optional(),
 }).omit({
   id: true,
   createdAt: true,
@@ -164,3 +172,98 @@ export type FoodLogFormInput = z.infer<typeof foodLogFormSchema>
 // Meal type enum
 export const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'] as const
 export type MealType = typeof mealTypes[number]
+
+// Water intake logs
+export const waterIntakeLogs = pgTable('water_intake_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(), // References auth.users.id
+  amountMl: integer('amount_ml').notNull(), // Amount in milliliters
+  loggedAt: timestamp('logged_at').defaultNow().notNull(),
+  date: text('date').notNull(), // ISO date string (YYYY-MM-DD) for easy querying
+})
+
+// User streaks tracking
+export const userStreaks = pgTable('user_streaks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().unique(), // References auth.users.id
+  currentStreak: integer('current_streak').notNull().default(0), // Current consecutive days
+  longestStreak: integer('longest_streak').notNull().default(0), // All-time longest streak
+  lastLogDate: text('last_log_date'), // ISO date string (YYYY-MM-DD) of last activity
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Weekly progress tracking
+export const weeklyProgress = pgTable('weekly_progress', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(), // References auth.users.id
+  weekStartDate: text('week_start_date').notNull(), // ISO date string (YYYY-MM-DD) - Monday of the week
+  daysLogged: integer('days_logged').notNull().default(0), // Number of days with food logs (0-7)
+  totalCalories: numeric('total_calories', { precision: 10, scale: 2 }).notNull().default('0'),
+  totalProtein: numeric('total_protein', { precision: 8, scale: 2 }).notNull().default('0'),
+  totalCarbs: numeric('total_carbs', { precision: 8, scale: 2 }).notNull().default('0'),
+  totalFats: numeric('total_fats', { precision: 8, scale: 2 }).notNull().default('0'),
+  totalWaterMl: integer('total_water_ml').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// Water intake schemas
+export const insertWaterIntakeLogSchema = createInsertSchema(waterIntakeLogs, {
+  amountMl: z.number().min(1, 'Amount must be at least 1ml').max(5000, 'Amount must be realistic'),
+}).omit({
+  id: true,
+  userId: true,
+  loggedAt: true,
+  date: true,
+})
+
+export const selectWaterIntakeLogSchema = createSelectSchema(waterIntakeLogs)
+
+// Type exports for water intake
+export type WaterIntakeLog = typeof waterIntakeLogs.$inferSelect
+export type NewWaterIntakeLog = typeof waterIntakeLogs.$inferInsert
+export type WaterIntakeLogInput = z.infer<typeof insertWaterIntakeLogSchema>
+
+// User streaks schemas
+export const selectUserStreakSchema = createSelectSchema(userStreaks)
+
+// Type exports for streaks
+export type UserStreak = typeof userStreaks.$inferSelect
+export type NewUserStreak = typeof userStreaks.$inferInsert
+
+// Weekly progress schemas
+export const selectWeeklyProgressSchema = createSelectSchema(weeklyProgress)
+
+// Type exports for weekly progress
+export type WeeklyProgress = typeof weeklyProgress.$inferSelect
+export type NewWeeklyProgress = typeof weeklyProgress.$inferInsert
+
+// Weight tracking logs
+export const weightLogs = pgTable('weight_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(), // References auth.users.id
+  weight: numeric('weight', { precision: 5, scale: 2 }).notNull(), // Weight in kg
+  date: text('date').notNull(), // ISO date string (YYYY-MM-DD)
+  notes: text('notes'), // Optional notes
+  loggedAt: timestamp('logged_at').defaultNow().notNull(),
+})
+
+// Weight logs schemas
+export const insertWeightLogSchema = createInsertSchema(weightLogs, {
+  weight: z.string().transform(Number).pipe(
+    z.number().min(20, 'Weight must be at least 20kg').max(500, 'Weight must be realistic')
+  ),
+  notes: z.string().max(500, 'Notes must be less than 500 characters').optional(),
+}).omit({
+  id: true,
+  userId: true,
+  loggedAt: true,
+  date: true,
+})
+
+export const selectWeightLogSchema = createSelectSchema(weightLogs)
+
+// Type exports for weight logs
+export type WeightLog = typeof weightLogs.$inferSelect
+export type NewWeightLog = typeof weightLogs.$inferInsert
+export type WeightLogInput = z.infer<typeof insertWeightLogSchema>
