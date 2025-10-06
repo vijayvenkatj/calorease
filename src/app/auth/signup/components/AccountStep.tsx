@@ -42,12 +42,6 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
   const passwordsMatch = formData.password === confirmPassword
   const canSubmit = formData.email && formData.password && passwordStrength === 4 && passwordsMatch
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (canSubmit && !isLoading) {
-      onSubmit()
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -56,7 +50,7 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
         <p className="text-gray-600 mt-2">Almost done! Create your CalorEase account</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -134,7 +128,7 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
             <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
           )}
         </div>
-      </form>
+      </div>
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <p className="text-sm text-green-800">

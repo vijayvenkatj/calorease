@@ -3,10 +3,10 @@ import postgres from 'postgres'
 import * as schema from './schema'
 
 // For edge runtime compatibility, we'll use the Supabase connection string
-const connectionString = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', 'postgresql://postgres:') + ':5432/postgres'
+const connectionString = process.env.DATABASE_URL
 
 if (!connectionString) {
-  throw new Error('Database connection string not found')
+  throw new Error('DATABASE_URL environment variable is required')
 }
 
 // Create the postgres client

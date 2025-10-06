@@ -25,10 +25,6 @@ export default function PersonalDataStep({ formData, updateFormData, onNext, can
     updateFormData({ [field]: value })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (canProceed) onNext()
-  }
 
   return (
     <div className="space-y-6">
@@ -37,7 +33,7 @@ export default function PersonalDataStep({ formData, updateFormData, onNext, can
         <p className="text-gray-600 mt-2">Tell us a bit about yourself</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         <div>
           <Label htmlFor="name">Full Name</Label>
           <Input
@@ -115,7 +111,7 @@ export default function PersonalDataStep({ formData, updateFormData, onNext, can
             />
           </div>
         </div>
-      </form>
+      </div>
     </div>
   )
 }

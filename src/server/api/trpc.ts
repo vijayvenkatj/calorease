@@ -199,6 +199,14 @@ export const appRouter = t.router({
         try {
           const { email, password, onboardingData } = input;
           
+          // Validate environment variables
+          if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Supabase configuration missing',
+            });
+          }
+          
           // Create Supabase client
           const supabase = await createClient();
           
@@ -210,7 +218,9 @@ export const appRouter = t.router({
               data: {
                 full_name: onboardingData.name,
               },
-              emailRedirectTo: `${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/auth/callback`,
+              emailRedirectTo: `${process.env.NODE_ENV === 'development' 
+                ? 'http://localhost:3000' 
+                : process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.com'}/auth/callback`,
             },
           });
 
@@ -229,19 +239,28 @@ export const appRouter = t.router({
           }
 
           // Create profile with onboarding data
-          const [newProfile] = await db
-            .insert(profiles)
-            .values({
-              id: authData.user.id,
-              ...onboardingData,
-              weight: String(onboardingData.weight),
-              height: String(onboardingData.height),
-              waist: onboardingData.waist ? String(onboardingData.waist) : undefined,
-              hips: onboardingData.hips ? String(onboardingData.hips) : undefined,
-              chest: onboardingData.chest ? String(onboardingData.chest) : undefined,
-              arms: onboardingData.arms ? String(onboardingData.arms) : undefined,
-            })
-            .returning();
+          let newProfile;
+          try {
+            [newProfile] = await db
+              .insert(profiles)
+              .values({
+                id: authData.user.id,
+                ...onboardingData,
+                weight: String(onboardingData.weight),
+                height: String(onboardingData.height),
+                waist: onboardingData.waist ? String(onboardingData.waist) : undefined,
+                hips: onboardingData.hips ? String(onboardingData.hips) : undefined,
+                chest: onboardingData.chest ? String(onboardingData.chest) : undefined,
+                arms: onboardingData.arms ? String(onboardingData.arms) : undefined,
+              })
+              .returning();
+          } catch (dbError) {
+            console.error('Database error during profile creation:', dbError);
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: 'Failed to create user profile',
+            });
+          }
 
           return {
             user: authData.user,
