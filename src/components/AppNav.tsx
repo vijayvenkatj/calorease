@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Leaf, LogOut, User, LayoutDashboard, Utensils, BarChart3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import NotificationBell from '@/components/NotificationBell'
 import Link from 'next/link'
 
 interface AppNavProps {
@@ -114,14 +115,16 @@ export default async function AppNav({ currentPage = 'dashboard' }: AppNavProps)
                 <span className="hidden sm:inline text-sm font-medium">{displayName}</span>
               </Link>
               
-              <ThemeToggle />
-              
-              <form action={signOut}>
-                <Button variant="ghost" size="sm">
-                  <LogOut className="h-4 w-4" />
-                  <span className="ml-2 hidden sm:inline">Sign out</span>
-                </Button>
-              </form>
+            <NotificationBell />
+            
+            <ThemeToggle />
+            
+            <form action={signOut}>
+              <Button variant="ghost" size="sm">
+                <LogOut className="h-4 w-4" />
+                <span className="ml-2 hidden sm:inline">Sign out</span>
+              </Button>
+            </form>
             </div>
           </div>
         </div>

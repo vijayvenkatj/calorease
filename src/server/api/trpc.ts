@@ -8,6 +8,7 @@ import { waterRouter } from "./routers/water";
 import { streakRouter } from "./routers/streak";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
+import { notificationsRouter } from "./routers/notifications";
 
 const t = initTRPC.create();
 
@@ -251,6 +252,9 @@ export const appRouter = t.router({
 
   // Analytics router (weight tracking and calculations)
   analytics: analyticsRouter,
+
+  // Notifications router
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

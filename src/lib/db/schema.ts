@@ -263,7 +263,38 @@ export const insertWeightLogSchema = createInsertSchema(weightLogs, {
 
 export const selectWeightLogSchema = createSelectSchema(weightLogs)
 
+// Notification settings
+export const notificationSettings = pgTable('notification_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  emailEnabled: integer('email_enabled').default(1).notNull(), // 1=true, 0=false
+  frequency: text('frequency').default('daily').notNull(), // daily | weekly
+  lastSentAt: timestamp('last_sent_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const selectNotificationSettingsSchema = createSelectSchema(notificationSettings)
+export const insertNotificationSettingsSchema = createInsertSchema(notificationSettings).omit({ id: true, createdAt: true, updatedAt: true })
+
+// In-app notifications
+export const inAppNotifications = pgTable('in_app_notifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  type: text('type').notNull(), // 'food_logged' | 'water_logged' | 'streak' | 'goal'
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  isRead: integer('is_read').default(0).notNull(), // 0=unread, 1=read
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const selectInAppNotificationSchema = createSelectSchema(inAppNotifications)
+
 // Type exports for weight logs
 export type WeightLog = typeof weightLogs.$inferSelect
 export type NewWeightLog = typeof weightLogs.$inferInsert
 export type WeightLogInput = z.infer<typeof insertWeightLogSchema>
+
+// Type exports for in-app notifications
+export type InAppNotification = typeof inAppNotifications.$inferSelect
+export type NewInAppNotification = typeof inAppNotifications.$inferInsert

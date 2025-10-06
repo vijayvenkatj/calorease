@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress } from '@/lib/db'
+import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress, inAppNotifications, notificationSettings, profiles } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
+import { getResendClient } from '@/utils/resend'
 
 const t = initTRPC.create()
 
@@ -262,6 +263,48 @@ export const foodRouter = t.router({
           updateUserStreak(user.id),
           updateWeeklyProgressForUser(user.id, weekStartDate),
         ])
+
+        // Create in-app notification
+        await db.insert(inAppNotifications).values({
+          userId: user.id,
+          type: 'food_logged',
+          title: 'Food logged successfully!',
+          message: `You logged ${input.foodName} (${input.calories} cal)`,
+        })
+
+        // Send email notification if enabled
+        const settings = await db.query.notificationSettings.findFirst({
+          where: (ns, { eq }) => eq(ns.userId, user.id),
+        })
+
+        if (settings && settings.emailEnabled === 1) {
+          const profile = await db.query.profiles.findFirst({
+            where: (p, { eq }) => eq(p.id, user.id),
+          })
+
+          try {
+            const resend = getResendClient()
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+            await resend.emails.send({
+              from: process.env.RESEND_FROM || 'CalorEase <noreply@calorease.dev>',
+              to: user.email!,
+              subject: 'Food logged - Great job!',
+              html: `
+                <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6">
+                  <h2>Hello ${profile?.name ?? 'there'} 👋</h2>
+                  <p>You just logged: <strong>${input.foodName}</strong> (${input.calories} calories)</p>
+                  <p>Keep up the great work tracking your nutrition!</p>
+                  <p><a href="${appUrl}/dashboard" style="display:inline-block;padding:10px 16px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none">View Dashboard</a></p>
+                </div>
+              `,
+            })
+          } catch (emailError) {
+            console.error('Failed to send email notification:', emailError)
+            // Don't throw - email failure shouldn't fail the whole operation
+          }
+        }
 
         return newLog
       } catch (error) {

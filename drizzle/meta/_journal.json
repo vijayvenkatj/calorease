@@ -8,6 +8,20 @@
       "when": 1759503910178,
       "tag": "0000_omniscient_boomer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759762738995,
+      "tag": "0001_chief_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759763983693,
+      "tag": "0002_yummy_shadow_king",
+      "breakpoints": true
     }
   ]
 }

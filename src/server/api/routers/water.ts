@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, waterIntakeLogs, insertWaterIntakeLogSchema } from '@/lib/db'
+import { db, waterIntakeLogs, insertWaterIntakeLogSchema, inAppNotifications, notificationSettings, profiles } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
+import { getResendClient } from '@/utils/resend'
 
 const t = initTRPC.create()
 
@@ -122,6 +123,48 @@ export const waterRouter = t.router({
             date: currentDate,
           })
           .returning()
+
+        // Create in-app notification
+        await db.insert(inAppNotifications).values({
+          userId: user.id,
+          type: 'water_logged',
+          title: 'Water intake logged!',
+          message: `You logged ${input.amountMl}ml of water`,
+        })
+
+        // Send email notification if enabled
+        const settings = await db.query.notificationSettings.findFirst({
+          where: (ns, { eq }) => eq(ns.userId, user.id),
+        })
+
+        if (settings && settings.emailEnabled === 1) {
+          const profile = await db.query.profiles.findFirst({
+            where: (p, { eq }) => eq(p.id, user.id),
+          })
+
+          try {
+            const resend = getResendClient()
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+            await resend.emails.send({
+              from: process.env.RESEND_FROM || 'CalorEase <noreply@calorease.dev>',
+              to: user.email!,
+              subject: 'Water logged - Stay hydrated!',
+              html: `
+                <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6">
+                  <h2>Hello ${profile?.name ?? 'there'} 👋</h2>
+                  <p>You just logged: <strong>${input.amountMl}ml</strong> of water</p>
+                  <p>Great job staying hydrated!</p>
+                  <p><a href="${appUrl}/dashboard" style="display:inline-block;padding:10px 16px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none">View Dashboard</a></p>
+                </div>
+              `,
+            })
+          } catch (emailError) {
+            console.error('Failed to send email notification:', emailError)
+            // Don't throw - email failure shouldn't fail the whole operation
+          }
+        }
 
         return newLog
       } catch (error) {

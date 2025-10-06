@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form'
 import { trpc } from '@/utils/trpc'
 import { toast } from 'sonner'
-import { Loader2, Save, User, Target, Activity, Ruler } from 'lucide-react'
+import { Loader2, Save, User, Target, Activity, Ruler, Bell } from 'lucide-react'
 
 // Form schema for react-hook-form (strings for inputs)
 const profileFormSchema = z.object({
@@ -32,6 +32,7 @@ type ProfileFormData = z.infer<typeof profileFormSchema>
 
 export default function ProfileForm() {
   const { data: profile, isLoading } = trpc.onboarding.getMyProfile.useQuery()
+  const { data: notifSettings } = trpc.notifications.getMySettings.useQuery()
   
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -79,6 +80,19 @@ export default function ProfileForm() {
     onError: (error) => {
       toast.error(error.message || 'Failed to update profile')
     },
+  })
+
+  const upsertNotif = trpc.notifications.upsertMySettings.useMutation({
+    onSuccess: () => {
+      utils.notifications.getMySettings.invalidate()
+      toast.success('Notification settings updated')
+    },
+    onError: (e) => toast.error(e.message),
+  })
+
+  const sendReminder = trpc.notifications.sendReminderNow.useMutation({
+    onSuccess: () => toast.success('Reminder sent'),
+    onError: (e) => toast.error(e.message),
   })
 
   const onSubmit = (data: ProfileFormData) => {
@@ -376,6 +390,43 @@ export default function ProfileForm() {
                   </FormItem>
                 )}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+            </CardTitle>
+            <CardDescription>
+              Email reminders to log food and water
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">Email reminders</div>
+                <div className="text-sm text-muted-foreground">Receive a simple reminder once a day</div>
+              </div>
+              <button
+                type="button"
+                className={`inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  (notifSettings?.emailEnabled ?? 1) === 1 ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+                onClick={() => {
+                  const enabled = (notifSettings?.emailEnabled ?? 1) === 1
+                  upsertNotif.mutate({ emailEnabled: !enabled, frequency: (notifSettings?.frequency as 'daily'|'weekly') || 'daily' })
+                }}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    (notifSettings?.emailEnabled ?? 1) === 1 ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </CardContent>
         </Card>
