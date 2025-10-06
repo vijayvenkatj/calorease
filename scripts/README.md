@@ -183,3 +183,150 @@ After seeding:
 
 Enjoy testing! 🚀
 
+---
+
+## Food Items Database Seeding
+
+### Overview
+The `seed-food-items.ts` script populates the `food_items` table with 1000+ Indian food items from the `Food.csv` file. This creates a comprehensive food database that users can search and select from when logging meals.
+
+### Prerequisites
+
+1. **Run Database Migrations First:**
+```bash
+# Generate migration from schema changes
+npx drizzle-kit generate
+
+# Apply migrations to create the food_items table
+npx drizzle-kit push
+```
+
+2. **Ensure Environment Variable:**
+Make sure `DATABASE_URL` is set in your `.env.local`:
+```env
+DATABASE_URL=your_postgres_connection_string
+```
+
+### Running the Seed Script
+
+```bash
+npx tsx scripts/seed-food-items.ts
+```
+
+### What Gets Seeded
+
+The script imports **1000+ food items** with complete nutritional data:
+
+**Primary Nutrients:**
+- Calories (kcal)
+- Protein (g)
+- Carbohydrates (g)
+- Fats (g)
+
+**Additional Nutrients:**
+- Free Sugar (g)
+- Fibre (g)
+- Sodium (mg)
+- Calcium (mg)
+- Iron (mg)
+- Vitamin C (mg)
+- Folate (µg)
+
+**Food Types Include:**
+- Indian dishes (curries, rice dishes, breads)
+- Beverages (tea, coffee, smoothies)
+- Desserts and sweets
+- Snacks and street food
+- Traditional meals
+- And much more!
+
+### Script Behavior
+
+The script will:
+1. ✅ Read `Food.csv` from the scripts directory
+2. ✅ Parse all 1000+ food items
+3. ✅ Remove existing CSV-sourced items (keeps user custom foods)
+4. ✅ Insert in batches of 100 for performance
+5. ✅ Display progress during insertion
+6. ✅ Show summary statistics
+
+**Important:** Only items with `isCustom = 0` (from CSV) are cleared. User-created custom foods (`isCustom = 1`) are preserved.
+
+### Verify the Data
+
+```sql
+-- Check total food items
+SELECT COUNT(*) FROM food_items;
+-- Expected: 1000+
+
+-- Check CSV items vs custom items
+SELECT 
+  CASE WHEN is_custom = 0 THEN 'CSV Items' ELSE 'Custom Items' END as type,
+  COUNT(*) as count
+FROM food_items
+GROUP BY is_custom;
+
+-- Sample some foods
+SELECT dish_name, calories, protein, carbohydrates, fats
+FROM food_items
+LIMIT 10;
+
+-- Search for specific foods
+SELECT dish_name, calories, protein
+FROM food_items
+WHERE dish_name ILIKE '%chicken%'
+LIMIT 10;
+```
+
+### Using the Food Database
+
+After seeding, users can:
+
+1. **Search for Foods** - Type in the search box to find foods instantly
+2. **View Nutritional Info** - See complete macro and micronutrient data
+3. **Log with One Click** - Select a food to auto-fill nutritional values
+4. **Adjust Serving Size** - Use multipliers (0.5, 1, 2, etc.)
+5. **Create Custom Foods** - Add personal recipes not in the database
+
+### Re-running the Script
+
+You can safely re-run the script multiple times:
+- It clears CSV items before inserting
+- User custom foods are NOT affected
+- Fresh data is loaded each time
+
+### Troubleshooting
+
+**"Table does not exist" Error:**
+```bash
+npx drizzle-kit push
+```
+
+**CSV File Not Found:**
+- Ensure `Food.csv` is in the `scripts/` directory
+- Check file path in the script
+
+**Parsing Errors:**
+- Check CSV format (comma-separated)
+- Verify headers match expected format
+- Look for malformed rows in the CSV
+
+**Database Connection Issues:**
+- Verify `DATABASE_URL` is correct
+- Check network access to database
+- Ensure database is running
+
+### Clean Up
+
+To remove all CSV-sourced food items:
+
+```sql
+DELETE FROM food_items WHERE is_custom = 0;
+```
+
+To remove ALL food items (including custom):
+
+```sql
+DELETE FROM food_items;
+```
+

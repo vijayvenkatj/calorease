@@ -298,3 +298,93 @@ export type WeightLogInput = z.infer<typeof insertWeightLogSchema>
 // Type exports for in-app notifications
 export type InAppNotification = typeof inAppNotifications.$inferSelect
 export type NewInAppNotification = typeof inAppNotifications.$inferInsert
+
+// Food items database (from CSV)
+export const foodItems = pgTable('food_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  dishName: text('dish_name').notNull(),
+  calories: numeric('calories', { precision: 8, scale: 2 }).notNull(), // kcal
+  carbohydrates: numeric('carbohydrates', { precision: 8, scale: 2 }).notNull(), // g
+  protein: numeric('protein', { precision: 8, scale: 2 }).notNull(), // g
+  fats: numeric('fats', { precision: 8, scale: 2 }).notNull(), // g
+  freeSugar: numeric('free_sugar', { precision: 8, scale: 2 }).default('0'), // g
+  fibre: numeric('fibre', { precision: 8, scale: 2 }).default('0'), // g
+  sodium: numeric('sodium', { precision: 8, scale: 2 }).default('0'), // mg
+  calcium: numeric('calcium', { precision: 8, scale: 2 }).default('0'), // mg
+  iron: numeric('iron', { precision: 8, scale: 2 }).default('0'), // mg
+  vitaminC: numeric('vitamin_c', { precision: 8, scale: 2 }).default('0'), // mg
+  folate: numeric('folate', { precision: 8, scale: 2 }).default('0'), // µg
+  isCustom: integer('is_custom').default(0).notNull(), // 0=from CSV, 1=user created
+  createdBy: uuid('created_by'), // null for CSV items, userId for custom items
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+// Food items schemas
+export const insertFoodItemSchema = createInsertSchema(foodItems, {
+  dishName: z.string().min(1, 'Dish name is required').max(200),
+  calories: z.union([
+    z.string().transform(Number),
+    z.number()
+  ]).pipe(z.number().min(0, 'Calories must be 0 or greater').max(10000)),
+  carbohydrates: z.union([
+    z.string().transform(Number),
+    z.number()
+  ]).pipe(z.number().min(0).max(1000)),
+  protein: z.union([
+    z.string().transform(Number),
+    z.number()
+  ]).pipe(z.number().min(0).max(1000)),
+  fats: z.union([
+    z.string().transform(Number),
+    z.number()
+  ]).pipe(z.number().min(0).max(1000)),
+  freeSugar: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(1000)).optional(),
+  fibre: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(1000)).optional(),
+  sodium: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(10000)).optional(),
+  calcium: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(10000)).optional(),
+  iron: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(1000)).optional(),
+  vitaminC: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(1000)).optional(),
+  folate: z.union([
+    z.string().transform(Number),
+    z.number(),
+    z.undefined()
+  ]).pipe(z.number().min(0).max(10000)).optional(),
+}).omit({
+  id: true,
+  isCustom: true,
+  createdBy: true,
+  createdAt: true,
+})
+
+export const selectFoodItemSchema = createSelectSchema(foodItems)
+
+// Type exports for food items
+export type FoodItem = Omit<typeof foodItems.$inferSelect, 'createdAt'> & {
+  createdAt: string // Database returns string
+}
+export type NewFoodItem = typeof foodItems.$inferInsert
+export type FoodItemInput = z.infer<typeof insertFoodItemSchema>

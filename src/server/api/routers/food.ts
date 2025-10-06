@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, lt, sql, or, ilike } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress, inAppNotifications, notificationSettings, profiles } from '@/lib/db'
+import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress, inAppNotifications, notificationSettings, profiles, foodItems, insertFoodItemSchema } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
 import { getResendClient } from '@/utils/resend'
 
@@ -506,6 +506,200 @@ export const foodRouter = t.router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch daily summary',
+        })
+      }
+    }),
+
+  // Search food items
+  searchFoodItems: t.procedure
+    .input(z.object({
+      query: z.string().min(1).max(100),
+      limit: z.number().min(1).max(50).default(10),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to search food items',
+          })
+        }
+
+        // Search in both CSV items and user's custom items
+        const searchPattern = `%${input.query}%`
+        
+        const results = await db
+          .select()
+          .from(foodItems)
+          .where(
+            and(
+              ilike(foodItems.dishName, searchPattern),
+              or(
+                eq(foodItems.isCustom, 0), // CSV items
+                eq(foodItems.createdBy, user.id) // User's custom items
+              )
+            )
+          )
+          .limit(input.limit)
+          .orderBy(foodItems.dishName)
+
+        return results
+      } catch (error) {
+        console.error('Error searching food items:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to search food items',
+        })
+      }
+    }),
+
+  // Get a single food item by ID
+  getFoodItem: t.procedure
+    .input(z.object({
+      id: z.string().uuid(),
+    }))
+    .query(async ({ input }) => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to view food items',
+          })
+        }
+
+        const [item] = await db
+          .select()
+          .from(foodItems)
+          .where(eq(foodItems.id, input.id))
+          .limit(1)
+
+        if (!item) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Food item not found',
+          })
+        }
+
+        // Check if it's a custom item that belongs to another user
+        if (item.isCustom === 1 && item.createdBy !== user.id) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cannot access this food item',
+          })
+        }
+
+        return item
+      } catch (error) {
+        console.error('Error fetching food item:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch food item',
+        })
+      }
+    }),
+
+  // Create a custom food item
+  createFoodItem: t.procedure
+    .input(insertFoodItemSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to create food items',
+          })
+        }
+
+        const [newItem] = await db
+          .insert(foodItems)
+          .values({
+            dishName: input.dishName,
+            calories: String(input.calories),
+            carbohydrates: String(input.carbohydrates),
+            protein: String(input.protein),
+            fats: String(input.fats),
+            freeSugar: input.freeSugar ? String(input.freeSugar) : '0',
+            fibre: input.fibre ? String(input.fibre) : '0',
+            sodium: input.sodium ? String(input.sodium) : '0',
+            calcium: input.calcium ? String(input.calcium) : '0',
+            iron: input.iron ? String(input.iron) : '0',
+            vitaminC: input.vitaminC ? String(input.vitaminC) : '0',
+            folate: input.folate ? String(input.folate) : '0',
+            isCustom: 1,
+            createdBy: user.id,
+          })
+          .returning()
+
+        return newItem
+      } catch (error) {
+        console.error('Error creating food item:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create food item',
+        })
+      }
+    }),
+
+  // Get user's custom food items
+  getMyCustomFoodItems: t.procedure
+    .query(async () => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to view custom food items',
+          })
+        }
+
+        const items = await db
+          .select()
+          .from(foodItems)
+          .where(
+            and(
+              eq(foodItems.isCustom, 1),
+              eq(foodItems.createdBy, user.id)
+            )
+          )
+          .orderBy(desc(foodItems.createdAt))
+
+        return items
+      } catch (error) {
+        console.error('Error fetching custom food items:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch custom food items',
         })
       }
     }),
