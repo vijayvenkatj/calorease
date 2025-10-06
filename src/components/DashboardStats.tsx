@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import WaterIntakeCard from '@/components/WaterIntakeCard'
 import { trpc } from '@/utils/trpc'
 import { Flame, TrendingUp, Trophy } from 'lucide-react'

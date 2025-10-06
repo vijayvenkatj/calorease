@@ -2,9 +2,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 
+interface FormData {
+  waist?: string
+  hips?: string
+  chest?: string
+  arms?: string
+}
+
 interface MeasurementsStepProps {
-  formData: any
-  updateFormData: (data: any) => void
+  formData: FormData
+  updateFormData: (data: Partial<FormData>) => void
   onNext: () => void
   onPrev: () => void
   onSubmit: () => void
@@ -13,7 +20,7 @@ interface MeasurementsStepProps {
   isLastStep: boolean
 }
 
-export default function MeasurementsStep({ formData, updateFormData, onNext, canProceed }: MeasurementsStepProps) {
+export default function MeasurementsStep({ formData, updateFormData, onNext }: MeasurementsStepProps) {
   const handleChange = (field: string, value: string) => {
     updateFormData({ [field]: value })
   }

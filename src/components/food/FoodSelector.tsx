@@ -116,7 +116,7 @@ export default function FoodSelector({
               {!isLoading && searchResults && searchResults.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground mb-4">
-                    No foods found matching "{debouncedQuery}"
+                    No foods found matching &quot;{debouncedQuery}&quot;
                   </p>
                   <Button
                     onClick={handleCreateCustom}

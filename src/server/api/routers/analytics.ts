@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, eq, gte, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { db, weightLogs, insertWeightLogSchema, foodLogs, profiles } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'

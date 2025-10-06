@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react'
@@ -24,7 +24,7 @@ const steps = [
   { id: 4, title: 'Account', component: AccountStep },
 ]
 
-export default function SignUpPage() {
+function SignUpPageContent() {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     // Personal data
@@ -104,15 +104,15 @@ export default function SignUpPage() {
           gender: formData.gender as 'male' | 'female' | 'other',
           weight: formData.weight,
           height: formData.height,
-          goals: formData.goals as any,
-          activityLevel: formData.activityLevel as any,
+          goals: formData.goals as 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_health' | 'increase_strength',
+          activityLevel: formData.activityLevel as 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active',
           waist: formData.waist || undefined,
           hips: formData.hips || undefined,
           chest: formData.chest || undefined,
           arms: formData.arms || undefined,
         }
       })
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   }
@@ -125,7 +125,7 @@ export default function SignUpPage() {
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <div key={step.id} className="flex flex-col items-center">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
@@ -225,5 +225,13 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignUpPageContent />
+    </Suspense>
   )
 }

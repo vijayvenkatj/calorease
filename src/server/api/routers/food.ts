@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { and, desc, eq, gte, lt, sql, or, ilike } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress, inAppNotifications, notificationSettings, profiles, foodItems, insertFoodItemSchema } from '@/lib/db'
+import { db, foodLogs, insertFoodLogSchema, userStreaks, weeklyProgress, inAppNotifications, foodItems, insertFoodItemSchema } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
 import { getResendClient } from '@/utils/resend'
 
@@ -45,7 +45,7 @@ async function updateUserStreak(userId: string) {
   lastLog.setHours(0, 0, 0, 0)
   
   if (lastLog.getTime() === today.getTime() || lastLog.getTime() === yesterday.getTime()) {
-    let checkDate = new Date(lastLog)
+      const checkDate = new Date(lastLog)
     
     for (const dateStr of dates) {
       const logDate = new Date(dateStr)

@@ -6,7 +6,7 @@ import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { foodLogFormSchema, insertFoodLogSchema, type FoodLogFormInput, type FoodLog, mealTypes } from '@/lib/db/schema'
+import { foodLogFormSchema, type FoodLogFormInput, type FoodLog, mealTypes } from '@/lib/db/schema'
 import { trpc } from '@/utils/trpc'
 import { toast } from 'sonner'
 
@@ -26,7 +26,7 @@ export default function FoodLogEditModal({
   const form = useForm<FoodLogFormInput>({
     resolver: zodResolver(foodLogFormSchema),
     defaultValues: {
-      mealType: foodLog.mealType as any,
+      mealType: foodLog.mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
       foodName: foodLog.foodName,
       calories: String(foodLog.calories || 0),
       protein: String(foodLog.protein || 0),

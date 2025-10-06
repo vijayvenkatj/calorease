@@ -36,7 +36,7 @@ export default async function DashboardPage() {
             {/* Food Log List - Main Content */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Today's Food Log</h3>
+                <h3 className="text-lg font-semibold">Today&apos;s Food Log</h3>
                 <p className="text-sm text-muted-foreground">
                   {new Date().toLocaleDateString('en-US', { 
                     weekday: 'short', 

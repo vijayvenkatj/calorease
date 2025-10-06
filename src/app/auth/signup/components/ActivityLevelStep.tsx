@@ -1,8 +1,12 @@
 import { Armchair, Footprints, Bike, Zap, Flame } from 'lucide-react'
 
+interface FormData {
+  activityLevel?: string
+}
+
 interface ActivityLevelStepProps {
-  formData: any
-  updateFormData: (data: any) => void
+  formData: FormData
+  updateFormData: (data: Partial<FormData>) => void
   onNext: () => void
   onPrev: () => void
   onSubmit: () => void
@@ -44,7 +48,7 @@ const activityOptions = [
   },
 ]
 
-export default function ActivityLevelStep({ formData, updateFormData, onNext, canProceed }: ActivityLevelStepProps) {
+export default function ActivityLevelStep({ formData, updateFormData }: ActivityLevelStepProps) {
   const handleChange = (value: string) => {
     updateFormData({ activityLevel: value })
   }

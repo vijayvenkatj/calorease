@@ -1,5 +1,4 @@
-import { z } from 'zod'
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
 import { db, userStreaks, foodLogs } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
@@ -38,7 +37,7 @@ async function calculateStreak(userId: string): Promise<{ currentStreak: number;
   
   // Only count current streak if last log was today or yesterday
   if (lastLog.getTime() === today.getTime() || lastLog.getTime() === yesterday.getTime()) {
-    let checkDate = new Date(lastLog)
+      const checkDate = new Date(lastLog)
     
     for (const dateStr of dates) {
       const logDate = new Date(dateStr)

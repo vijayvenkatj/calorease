@@ -3,9 +3,14 @@ import { Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+interface FormData {
+  email?: string
+  password?: string
+}
+
 interface AccountStepProps {
-  formData: any
-  updateFormData: (data: any) => void
+  formData: FormData
+  updateFormData: (data: Partial<FormData>) => void
   onNext: () => void
   onPrev: () => void
   onSubmit: () => void
@@ -95,13 +100,13 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
                   <div key={index} className="flex items-center gap-1">
                     <CheckCircle 
                       className={`h-3 w-3 ${
-                        req.regex.test(formData.password) 
+                        req.regex.test(formData.password || '') 
                           ? 'text-green-500' 
                           : 'text-gray-300'
                       }`} 
                     />
                     <span className={
-                      req.regex.test(formData.password) 
+                      req.regex.test(formData.password || '') 
                         ? 'text-green-600' 
                         : 'text-gray-500'
                     }>
@@ -133,7 +138,7 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
 
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <p className="text-sm text-green-800">
-          🎉 You're all set! Click "Create Account" to start your wellness journey with CalorEase.
+          🎉 You&apos;re all set! Click &quot;Create Account&quot; to start your wellness journey with CalorEase.
         </p>
       </div>
     </div>

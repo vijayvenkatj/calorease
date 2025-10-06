@@ -92,7 +92,7 @@ export default function NutritionSummary({ date }: NutritionSummaryProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-            <CardTitle>Today's Nutrition</CardTitle>
+            <CardTitle>Today&apos;s Nutrition</CardTitle>
           </div>
           <Badge variant="secondary" className="text-xs font-normal">
             {summary.logCount} {summary.logCount === 1 ? 'entry' : 'entries'}

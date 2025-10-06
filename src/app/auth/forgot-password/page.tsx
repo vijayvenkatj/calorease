@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Mail, Leaf } from 'lucide-react'
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { createClient } from '@/utils/supabase/client'
 import { toast } from 'sonner'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordPageContent() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
         setEmailSent(true)
         toast.success('Password reset email sent!')
       }
-    } catch (error) {
+    } catch {
       toast.error('An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -61,12 +61,12 @@ export default function ForgotPasswordPage() {
               Check your email
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              We've sent a password reset link to <strong>{email}</strong>
+              We&apos;ve sent a password reset link to <strong>{email}</strong>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              <p>Didn't receive the email? Check your spam folder or</p>
+              <p>Didn&apos;t receive the email? Check your spam folder or</p>
               <button
                 onClick={() => setEmailSent(false)}
                 className="text-green-600 hover:text-green-500 font-medium"
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
             Forgot your password?
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            No worries! Enter your email and we'll send you a reset link.
+            No worries! Enter your email and we&apos;ll send you a reset link.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -156,5 +156,13 @@ export default function ForgotPasswordPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ForgotPasswordPageContent />
+    </Suspense>
   )
 }

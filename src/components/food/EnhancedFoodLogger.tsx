@@ -191,7 +191,7 @@ export default function EnhancedFoodLogger({ onSuccess, defaultMealType }: Enhan
                       {!isLoading && searchResults && searchResults.length === 0 && (
                         <div className="p-4 text-center space-y-3">
                           <p className="text-sm text-muted-foreground">
-                            No foods found for "{searchQuery}"
+                            No foods found for &quot;{searchQuery}&quot;
                           </p>
                           <Button
                             type="button"

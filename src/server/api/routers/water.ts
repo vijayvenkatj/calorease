@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { and, desc, eq, gte, lt, sql } from 'drizzle-orm'
+import { and, desc, eq, sql } from 'drizzle-orm'
 import { initTRPC, TRPCError } from '@trpc/server'
-import { db, waterIntakeLogs, insertWaterIntakeLogSchema, inAppNotifications, notificationSettings, profiles } from '@/lib/db'
+import { db, waterIntakeLogs, insertWaterIntakeLogSchema, inAppNotifications } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
 import { getResendClient } from '@/utils/resend'
 

@@ -7,11 +7,10 @@ import { z } from 'zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form'
 import { trpc } from '@/utils/trpc'
 import { toast } from 'sonner'
-import { Loader2, Save, User, Target, Activity, Ruler, Bell } from 'lucide-react'
+import { Loader2, Save, User, Target, Ruler, Bell } from 'lucide-react'
 
 // Form schema for react-hook-form (strings for inputs)
 const profileFormSchema = z.object({
@@ -60,8 +59,8 @@ export default function ProfileForm() {
         gender: profile.gender as 'male' | 'female' | 'other',
         weight: String(profile.weight),
         height: String(profile.height),
-        goals: profile.goals as any,
-        activityLevel: profile.activityLevel as any,
+        goals: profile.goals as z.infer<typeof profileFormSchema>['goals'],
+        activityLevel: profile.activityLevel as z.infer<typeof profileFormSchema>['activityLevel'],
         waist: profile.waist ? String(profile.waist) : '',
         hips: profile.hips ? String(profile.hips) : '',
         chest: profile.chest ? String(profile.chest) : '',
@@ -90,10 +89,6 @@ export default function ProfileForm() {
     onError: (e) => toast.error(e.message),
   })
 
-  const sendReminder = trpc.notifications.sendReminderNow.useMutation({
-    onSuccess: () => toast.success('Reminder sent'),
-    onError: (e) => toast.error(e.message),
-  })
 
   const onSubmit = (data: ProfileFormData) => {
     // Transform form data to API format

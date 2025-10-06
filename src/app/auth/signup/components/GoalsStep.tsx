@@ -1,8 +1,12 @@
 import { TrendingDown, TrendingUp, Target, Heart, Zap } from 'lucide-react'
 
+interface FormData {
+  goals?: string
+}
+
 interface GoalsStepProps {
-  formData: any
-  updateFormData: (data: any) => void
+  formData: FormData
+  updateFormData: (data: Partial<FormData>) => void
   onNext: () => void
   onPrev: () => void
   onSubmit: () => void
@@ -44,7 +48,7 @@ const goalOptions = [
   },
 ]
 
-export default function GoalsStep({ formData, updateFormData, onNext, canProceed }: GoalsStepProps) {
+export default function GoalsStep({ formData, updateFormData }: GoalsStepProps) {
   const handleChange = (value: string) => {
     updateFormData({ goals: value })
   }

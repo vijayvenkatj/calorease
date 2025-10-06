@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { and, eq, desc } from 'drizzle-orm'
-import { db, notificationSettings, profiles, inAppNotifications } from '@/lib/db'
+import { db, notificationSettings, inAppNotifications } from '@/lib/db'
 import { createClient } from '@/utils/supabase/server'
 import { getResendClient } from '@/utils/resend'
 

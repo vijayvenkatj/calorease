@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
-import { db, profiles, insertProfileSchema, type OnboardingData } from "@/lib/db";
+import { db, profiles, insertProfileSchema } from "@/lib/db";
 import { createClient } from "@/utils/supabase/server";
 import { foodRouter } from "./routers/food";
 import { waterRouter } from "./routers/water";
@@ -35,6 +35,12 @@ export const appRouter = t.router({
             .values({
               id: userId,
               ...profileData,
+              weight: String(profileData.weight),
+              height: String(profileData.height),
+              waist: profileData.waist ? String(profileData.waist) : undefined,
+              hips: profileData.hips ? String(profileData.hips) : undefined,
+              chest: profileData.chest ? String(profileData.chest) : undefined,
+              arms: profileData.arms ? String(profileData.arms) : undefined,
             })
             .returning();
 
@@ -111,6 +117,12 @@ export const appRouter = t.router({
             .update(profiles)
             .set({
               ...profileData,
+              weight: String(profileData.weight),
+              height: String(profileData.height),
+              waist: profileData.waist ? String(profileData.waist) : undefined,
+              hips: profileData.hips ? String(profileData.hips) : undefined,
+              chest: profileData.chest ? String(profileData.chest) : undefined,
+              arms: profileData.arms ? String(profileData.arms) : undefined,
               updatedAt: new Date(),
             })
             .where(eq(profiles.id, userId))
@@ -145,6 +157,12 @@ export const appRouter = t.router({
             .update(profiles)
             .set({
               ...input,
+              weight: String(input.weight),
+              height: String(input.height),
+              waist: input.waist ? String(input.waist) : undefined,
+              hips: input.hips ? String(input.hips) : undefined,
+              chest: input.chest ? String(input.chest) : undefined,
+              arms: input.arms ? String(input.arms) : undefined,    
               updatedAt: new Date(),
             })
             .where(eq(profiles.id, user.id))
@@ -216,6 +234,12 @@ export const appRouter = t.router({
             .values({
               id: authData.user.id,
               ...onboardingData,
+              weight: String(onboardingData.weight),
+              height: String(onboardingData.height),
+              waist: onboardingData.waist ? String(onboardingData.waist) : undefined,
+              hips: onboardingData.hips ? String(onboardingData.hips) : undefined,
+              chest: onboardingData.chest ? String(onboardingData.chest) : undefined,
+              arms: onboardingData.arms ? String(onboardingData.arms) : undefined,
             })
             .returning();
 
