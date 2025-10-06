@@ -46,6 +46,17 @@ export const analyticsRouter = t.router({
           })
           .returning()
 
+        // Also update the user's current weight in profile to keep it in sync
+        try {
+          await db
+            .update(profiles)
+            .set({ weight: String(input.weight), updatedAt: new Date() })
+            .where(eq(profiles.id, user.id))
+        } catch (err) {
+          // Non-fatal: log error but continue returning the weight log result
+          console.error('Failed to sync profile weight after weight log:', err)
+        }
+
         return newLog
       } catch (error) {
         console.error('Error adding weight log:', error)
@@ -267,20 +278,14 @@ export const analyticsRouter = t.router({
           // Calculate the daily calorie deficit/surplus based on weight change
           const dailyEnergyImbalance = (totalWeightChange * 7700) / daysLogged
           
-          // Safety check: If the calculated imbalance is unrealistic (>3000 cal/day),
-          // the data likely has errors (wrong weight entry, water weight, etc.)
-          // Max realistic deficit: ~1500 cal/day (1.5 kg/week loss)
-          // Max realistic surplus: ~1000 cal/day (1 kg/week gain)
+          // Safety check: If the calculated imbalance is unrealistic (>3000 cal/day)
           const maxRealisticDeficit = 1500
           const maxRealisticSurplus = 1000
           
           if (Math.abs(dailyEnergyImbalance) > 3000) {
-            // Data seems unrealistic - likely data entry error or water weight
-            // Fall back to average intake as maintenance
             isDataRealistic = false
             maintenanceCalories = avgDailyCalories
           } else {
-            // Clamp the imbalance to realistic ranges
             const clampedImbalance = Math.max(
               -maxRealisticSurplus,
               Math.min(maxRealisticDeficit, dailyEnergyImbalance)
@@ -288,22 +293,12 @@ export const analyticsRouter = t.router({
             maintenanceCalories = Math.round(avgDailyCalories - clampedImbalance)
           }
           
-          // Additional safety: Maintenance should be within reasonable bounds
-          // Most people: 1200-4000 cal/day
           maintenanceCalories = Math.max(1200, Math.min(4000, maintenanceCalories))
         }
 
-        // 4. Goal calories based on target weekly weight change
-        // Formula: maintenanceCalories + (targetWeightChange * 7700 / 7)
-        // Negative target (weight loss) = reduce calories by adding negative value
-        // Positive target (weight gain) = increase calories by adding positive value
-        // Example: -0.5 kg/week = -0.5 * 7700 / 7 = -550 cal/day adjustment
         const dailyCalorieAdjustment = (targetWeeklyWeightChange * 7700) / 7
         let goalCalories = Math.round(maintenanceCalories + dailyCalorieAdjustment)
-        
-        // Safety: Goal calories should also be within reasonable bounds
-        // Minimum: 1200 cal/day (women) or 1500 cal/day (men) - use 1200 as floor
-        // Maximum: 4000 cal/day for most people
+       
         goalCalories = Math.max(1200, Math.min(4000, goalCalories))
 
         return {

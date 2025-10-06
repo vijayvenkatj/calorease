@@ -22,6 +22,8 @@ export default function WeightTracker() {
       setNotes('')
       utils.analytics.getWeightLogs.invalidate()
       utils.analytics.getAnalytics.invalidate()
+      // Ensure the profile reflects the latest weight
+      utils.onboarding.getMyProfile.invalidate()
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to log weight')
