@@ -3,6 +3,7 @@ import MealSuggestionCard, { MealSuggestion } from '@/components/nutrition/MealS
 import TipsCard from '@/components/nutrition/TipsCard'
 import NutritionFactCard from '@/components/nutrition/NutritionFactCard'
 import MacroPieChartContainer from '@/components/nutrition/MacroPieChartContainer'
+import ImageFoodLogger from '@/components/food/ImageFoodLogger'
 
 export default async function NutritionPage() {
   // Placeholder/demo data; replace with real queries later
@@ -71,6 +72,10 @@ export default async function NutritionPage() {
             </div>
 
             <div className="lg:col-span-1 space-y-6">
+              <section>
+                <ImageFoodLogger />
+              </section>
+
               <section>
                 <MacroPieChartContainer />
               </section>

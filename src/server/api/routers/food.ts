@@ -703,4 +703,124 @@ export const foodRouter = t.router({
         })
       }
     }),
+
+  // Add multiple food logs in a batch (for image recognition)
+  addBatchLogs: t.procedure
+    .input(z.object({
+      mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+      foodItems: z.array(z.object({
+        foodName: z.string().min(1, 'Food name is required').max(100),
+        calories: z.number().min(0, 'Calories must be 0 or greater').max(10000, 'Calories must be realistic'),
+        protein: z.number().min(0, 'Protein must be 0 or greater').max(1000, 'Protein must be realistic').optional(),
+        carbs: z.number().min(0, 'Carbs must be 0 or greater').max(1000, 'Carbs must be realistic').optional(),
+        fats: z.number().min(0, 'Fats must be 0 or greater').max(1000, 'Fats must be realistic').optional(),
+      })).min(1, 'At least one food item is required').max(20, 'Too many food items'),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to add food logs',
+          })
+        }
+
+        // Insert all food logs in a transaction
+        const newLogs = await db.transaction(async (tx) => {
+          const logs = []
+          
+          for (const item of input.foodItems) {
+            const [newLog] = await tx
+              .insert(foodLogs)
+              .values({
+                userId: user.id,
+                mealType: input.mealType,
+                foodName: item.foodName,
+                calories: String(item.calories),
+                protein: item.protein ? String(item.protein) : '0',
+                carbs: item.carbs ? String(item.carbs) : '0',
+                fats: item.fats ? String(item.fats) : '0',
+              })
+              .returning()
+            
+            logs.push(newLog)
+          }
+          
+          return logs
+        })
+
+        // Update streak and weekly progress asynchronously
+        const weekStartDate = getMondayOfWeek(new Date())
+        await Promise.all([
+          updateUserStreak(user.id),
+          updateWeeklyProgressForUser(user.id, weekStartDate),
+        ])
+
+        // Create in-app notification
+        await db.insert(inAppNotifications).values({
+          userId: user.id,
+          type: 'food_logged',
+          title: 'Food logged successfully!',
+          message: `${input.foodItems.length} items logged for ${input.mealType}`,
+        })
+
+        // Send email notification if enabled
+        const settings = await db.query.notificationSettings.findFirst({
+          where: (ns, { eq }) => eq(ns.userId, user.id),
+        })
+
+        if (settings && settings.emailEnabled === 1) {
+          const profile = await db.query.profiles.findFirst({
+            where: (p, { eq }) => eq(p.id, user.id),
+          })
+
+          try {
+            const resend = getResendClient()
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 
+              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
+            const totalCalories = input.foodItems.reduce((sum, item) => sum + item.calories, 0)
+            const foodNames = input.foodItems.map(item => item.foodName).join(', ')
+
+            await resend.emails.send({
+              from: process.env.RESEND_FROM || 'CalorEase <noreply@calorease.dev>',
+              to: user.email!,
+              subject: 'Food logged - Great job!',
+              html: `
+                <div style="font-family:Inter,system-ui,Arial,sans-serif;line-height:1.6">
+                  <h2>Hello ${profile?.name ?? 'there'} 👋</h2>
+                  <p>You just logged ${input.foodItems.length} items for ${input.mealType}: <strong>${foodNames}</strong></p>
+                  <p>Total calories: <strong>${totalCalories}</strong></p>
+                  <p>Keep up the great work tracking your nutrition!</p>
+                  <p><a href="${appUrl}/dashboard" style="display:inline-block;padding:10px 16px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none">View Dashboard</a></p>
+                </div>
+              `,
+            })
+          } catch (emailError) {
+            console.error('Failed to send email notification:', emailError)
+            // Don't throw - email failure shouldn't fail the whole operation
+          }
+        }
+
+        return {
+          success: true,
+          logs: newLogs,
+          count: newLogs.length,
+        }
+      } catch (error) {
+        console.error('Error adding batch food logs:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to add food logs',
+        })
+      }
+    }),
 })
