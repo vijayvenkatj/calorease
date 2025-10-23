@@ -53,12 +53,19 @@ export default function ImageFoodLogger() {
   const [mealType, setMealType] = useState<MealType>('breakfast')
   const [editingItem, setEditingItem] = useState<string | null>(null)
 
+  const utils = trpc.useUtils()
+
   const addBatchLogsMutation = trpc.food.addBatchLogs.useMutation({
     onSuccess: () => {
       toast.success('Food items logged successfully!')
       setRecognizedItems([])
       setFile(null)
       setEditingItem(null)
+      // Invalidate queries to refresh the UI
+      utils.food.getLogs.invalidate()
+      utils.food.getDailySummary.invalidate()
+      utils.streak.getStreak.invalidate()
+      utils.progress.getWeeklyProgress.invalidate()
     },
     onError: (error) => {
       toast.error(`Failed to log food items: ${error.message}`)

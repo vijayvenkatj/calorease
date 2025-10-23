@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     
     // Validate the response structure
-    if (!data.food_items || !Array.isArray(data.food_items)) {
+    if (!data.items || !Array.isArray(data.items)) {
       return NextResponse.json(
         { error: 'Invalid response from food recognition service' },
         { status: 502 }
@@ -60,72 +60,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Transform the response to match our expected format
-    // Handle different response formats from the Python service
     const transformedData = {
-      food_items: data.food_items.map((item: any) => {
-        // Handle recognized food format (with estimated_nutrients_per_serving)
-        if (item.estimated_nutrients_per_serving) {
+        food_items: data.items.map((item: any) => {
           return {
             name: item.name || 'Unknown Food',
             description: item.description || 'No description available',
-            quantity: typeof item.quantity === 'string' ? 1 : (item.quantity || 1),
+            quantity: 1,
             estimated_nutrition: {
-              carbohydrates_g: parseFloat(item.estimated_nutrients_per_serving?.carbohydrates_g) || 0,
-              protein_g: parseFloat(item.estimated_nutrients_per_serving?.protein_g) || 0,
-              fat_g: parseFloat(item.estimated_nutrients_per_serving?.fat_g) || 0,
-              calories: parseFloat(item.estimated_nutrients_per_serving?.calories) || 0,
+              carbohydrates_g: parseFloat(item.carbohydrates_g) || 0,
+              protein_g: parseFloat(item.protein_g) || 0,
+              fat_g: parseFloat(item.fat_g) || 0,
+              calories: parseFloat(item.calories_kcal) || 0,
             }
           }
-        }
-        
-        // Handle your actual response format (with direct nutrition fields)
-        if (item.name && item.carbohydrates !== undefined) {
-          return {
-            name: item.name || 'Unknown Food',
-            description: item.description || 'No description available',
-            quantity: typeof item.quantity === 'string' ? 1 : (item.quantity || 1),
-            estimated_nutrition: {
-              carbohydrates_g: parseFloat(item.carbohydrates) || 0,
-              protein_g: parseFloat(item.proteins) || 0, // Note: 'proteins' not 'protein'
-              fat_g: parseFloat(item.fats) || 0,
-              calories: parseFloat(item.estimated_calories) || 0,
-            }
-          }
-        }
-        
-        // Handle unrecognized food format (with direct nutrition fields)
-        if (item.item) {
-          return {
-            name: item.item || 'Unknown Food',
-            description: item.description || 'No description available',
-            quantity: typeof item.quantity === 'string' ? 1 : (item.quantity || 1),
-            estimated_nutrition: {
-              carbohydrates_g: parseFloat(item.carbohydrates) || 0,
-              protein_g: parseFloat(item.protein) || 0,
-              fat_g: parseFloat(item.fat) || 0,
-              calories: parseFloat(item.calories) || 0,
-            }
-          }
-        }
-        
-        // Fallback for any other format
-        return {
-          name: item.name || item.item || 'Unknown Food',
-          description: item.description || 'No description available',
-          quantity: typeof item.quantity === 'string' ? 1 : (item.quantity || 1),
-          estimated_nutrition: {
-            carbohydrates_g: 0,
-            protein_g: 0,
-            fat_g: 0,
-            calories: 0,
-          }
-        }
       }),
       total_nutrition: {
-        total_carbohydrates_g: parseFloat(data.total_nutritional_values?.total_carbohydrates || data.total_nutrition?.total_carbohydrates_g || data.total_nutrition?.total_carbohydrates) || 0,
-        total_protein_g: parseFloat(data.total_nutritional_values?.total_proteins || data.total_nutrition?.total_protein_g || data.total_nutrition?.total_protein) || 0,
-        total_fat_g: parseFloat(data.total_nutritional_values?.total_fats || data.total_nutrition?.total_fat_g || data.total_nutrition?.total_fat) || 0,
-        total_calories: parseFloat(data.total_nutritional_values?.total_estimated_calories || data.total_nutrition?.total_calories) || 0,
+        total_carbohydrates_g: parseFloat(data.totals.total_carbohydrates_g) || 0,
+        total_protein_g: parseFloat(data.totals.total_protein_g) || 0,
+        total_fat_g: parseFloat(data.totals.total_fat_g) || 0,
+        total_calories: parseFloat(data.totals.total_calories_kcal) || 0,
       }
     }
 
