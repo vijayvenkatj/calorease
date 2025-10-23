@@ -19,6 +19,7 @@ const profileFormSchema = z.object({
   gender: z.enum(['male', 'female', 'other']),
   weight: z.string().min(1, 'Weight is required'),
   height: z.string().min(1, 'Height is required'),
+  region: z.string().min(1, 'Region is required').max(100),
   goals: z.enum(['lose_weight', 'gain_muscle', 'maintain_weight', 'improve_health', 'increase_strength']),
   activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active']),
   waist: z.string().optional(),
@@ -41,6 +42,7 @@ export default function ProfileForm() {
       gender: 'male',
       weight: '70',
       height: '170',
+      region: '',
       goals: 'maintain_weight',
       activityLevel: 'moderately_active',
       waist: '',
@@ -59,6 +61,7 @@ export default function ProfileForm() {
         gender: profile.gender as 'male' | 'female' | 'other',
         weight: String(profile.weight),
         height: String(profile.height),
+        region: profile.region || '',
         goals: profile.goals as z.infer<typeof profileFormSchema>['goals'],
         activityLevel: profile.activityLevel as z.infer<typeof profileFormSchema>['activityLevel'],
         waist: profile.waist ? String(profile.waist) : '',
@@ -98,6 +101,7 @@ export default function ProfileForm() {
       gender: data.gender,
       weight: data.weight,
       height: data.height,
+      region: data.region,
       goals: data.goals,
       activityLevel: data.activityLevel,
       waist: data.waist || undefined,
@@ -188,6 +192,26 @@ export default function ProfileForm() {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="region"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Region</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., TamilNadu, Karnataka, Maharashtra" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Your region helps us provide personalized dish recommendations
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

@@ -9,6 +9,7 @@ import { streakRouter } from "./routers/streak";
 import { progressRouter } from "./routers/progress";
 import { analyticsRouter } from "./routers/analytics";
 import { notificationsRouter } from "./routers/notifications";
+import { recommendationsRouter } from "./routers/recommendations";
 
 const t = initTRPC.create();
 
@@ -298,6 +299,9 @@ export const appRouter = t.router({
 
   // Notifications router
   notifications: notificationsRouter,
+
+  // Recommendations router
+  recommendations: recommendationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

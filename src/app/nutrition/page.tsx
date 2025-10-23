@@ -1,40 +1,15 @@
 import AppNav from '@/components/AppNav'
-import MealSuggestionCard, { MealSuggestion } from '@/components/nutrition/MealSuggestionCard'
+import DishRecommendationsSection from '@/components/nutrition/DishRecommendationsSection'
 import TipsCard from '@/components/nutrition/TipsCard'
 import NutritionFactCard from '@/components/nutrition/NutritionFactCard'
 import MacroPieChartContainer from '@/components/nutrition/MacroPieChartContainer'
 import ImageFoodLogger from '@/components/food/ImageFoodLogger'
 
 export default async function NutritionPage() {
-  // Placeholder/demo data; replace with real queries later
-  const suggestions: MealSuggestion[] = [
-    {
-      id: '1',
-      name: 'Grilled Chicken Bowl',
-      imageUrl: '/vercel.svg',
-      calories: 520,
-      macros: { protein: 42, carbs: 48, fats: 16 },
-    },
-    {
-      id: '2',
-      name: 'Mediterranean Salad',
-      imageUrl: '/globe.svg',
-      calories: 380,
-      macros: { protein: 18, carbs: 34, fats: 20 },
-    },
-    {
-      id: '3',
-      name: 'Tofu Veggie Stir-fry',
-      imageUrl: '/window.svg',
-      calories: 450,
-      macros: { protein: 25, carbs: 55, fats: 12 },
-    },
-  ]
-
   const dailyTips = [
     'Add a serving of high-fiber veggies to lunch.',
     'Prioritize lean protein at dinner to support recovery.',
-    'Stay hydrated — aim for 2–3L today.',
+    'Stay hydrated — aim for 2-3L today.',
   ]
 
   const funFact = 'Bananas are berries, but strawberries are not.'
@@ -56,14 +31,10 @@ export default async function NutritionPage() {
             <div className="lg:col-span-2 space-y-6">
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">AI Meal Suggestions</h3>
-                  <p className="text-sm text-muted-foreground">Curated for your goals</p>
+                  <h3 className="text-lg font-semibold">Rate Your Regional Dishes</h3>
+                  <p className="text-sm text-muted-foreground">Help us personalize your recommendations</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {suggestions.map((meal) => (
-                    <MealSuggestionCard key={meal.id} meal={meal} />
-                  ))}
-                </div>
+                <DishRecommendationsSection />
               </section>
 
               <section>

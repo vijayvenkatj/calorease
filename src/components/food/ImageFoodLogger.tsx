@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2, Upload, CheckCircle, XCircle, Edit3 } from 'lucide-react'
+import { Loader2, Upload, CheckCircle, Edit3 } from 'lucide-react'
 import { trpc } from '@/utils/trpc'
 import { toast } from 'sonner'
 

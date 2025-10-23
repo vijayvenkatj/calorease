@@ -30,6 +30,8 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
   const [showPassword, setShowPassword] = useState(false)
   const [confirmPassword, setConfirmPassword] = useState('')
 
+  console.log(onSubmit,isLoading)
+
   const handleChange = (field: string, value: string) => {
     updateFormData({ [field]: value })
   }
@@ -40,7 +42,7 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
 
   const passwordStrength = getPasswordStrength(formData.password || '')
   const passwordsMatch = formData.password === confirmPassword
-  const canSubmit = formData.email && formData.password && passwordStrength === 4 && passwordsMatch
+  // const canSubmit = formData.email && formData.password && passwordStrength === 4 && passwordsMatch
 
 
   return (

@@ -1,4 +1,4 @@
-import { pgTable, text, integer, numeric, uuid, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer, numeric, uuid, timestamp, unique } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import { z } from 'zod'
 
@@ -11,6 +11,7 @@ export const profiles = pgTable('profiles', {
   height: numeric('height', { precision: 5, scale: 2 }).notNull(), // cm
   goals: text('goals').notNull(),
   activityLevel: text('activity_level').notNull(),
+  region: text('region'), // User's region for dish recommendations
   
   // Measurements (optional)
   waist: numeric('waist', { precision: 5, scale: 2 }),
@@ -47,6 +48,7 @@ export const insertProfileSchema = createInsertSchema(profiles, {
   ),
   goals: z.enum(['lose_weight', 'gain_muscle', 'maintain_weight', 'improve_health', 'increase_strength']),
   activityLevel: z.enum(['sedentary', 'lightly_active', 'moderately_active', 'very_active', 'extra_active']),
+  region: z.string().min(1, 'Region is required').max(100).optional(),
   waist: z.union([
     z.string().transform(Number).pipe(z.number().min(40).max(200)),
     z.literal('').transform(() => undefined),
@@ -388,3 +390,34 @@ export type FoodItem = Omit<typeof foodItems.$inferSelect, 'createdAt'> & {
 }
 export type NewFoodItem = typeof foodItems.$inferInsert
 export type FoodItemInput = z.infer<typeof insertFoodItemSchema>
+
+// Dish ratings table
+export const dishRatings = pgTable('dish_ratings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(), // References auth.users.id
+  dishName: text('dish_name').notNull(),
+  rating: numeric('rating', { precision: 2, scale: 1 }).notNull(), // 0.0 to 5.0
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  // Unique constraint to prevent duplicate ratings per user per dish
+  userDishUnique: unique('user_dish_unique').on(table.userId, table.dishName),
+}))
+
+// Dish ratings schemas
+export const insertDishRatingSchema = createInsertSchema(dishRatings, {
+  dishName: z.string().min(1, 'Dish name is required').max(200),
+  rating: z.number().min(0, 'Rating must be at least 0').max(5, 'Rating must be at most 5'),
+}).omit({
+  id: true,
+  userId: true,
+  createdAt: true,
+  updatedAt: true,
+})
+
+export const selectDishRatingSchema = createSelectSchema(dishRatings)
+
+// Type exports for dish ratings
+export type DishRating = typeof dishRatings.$inferSelect
+export type NewDishRating = typeof dishRatings.$inferInsert
+export type DishRatingInput = z.infer<typeof insertDishRatingSchema>

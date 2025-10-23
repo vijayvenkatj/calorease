@@ -33,6 +33,7 @@ function SignUpPageContent() {
     gender: '',
     weight: '',
     height: '',
+    region: '',
     // Goals
     goals: '',
     // Activity
@@ -104,6 +105,7 @@ function SignUpPageContent() {
           gender: formData.gender as 'male' | 'female' | 'other',
           weight: formData.weight,
           height: formData.height,
+          region: formData.region,
           goals: formData.goals as 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_health' | 'increase_strength',
           activityLevel: formData.activityLevel as 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extra_active',
           waist: formData.waist || undefined,

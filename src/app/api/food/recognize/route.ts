@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+
+interface FoodItem {
+  name: string
+  description: string
+  carbohydrates_g: string
+  protein_g: string
+  fat_g: string
+  calories_kcal: string
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get the form data from the request
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Transform the response to match our expected format
     const transformedData = {
-        food_items: data.items.map((item: any) => {
+        food_items: data.items.map((item: FoodItem) => {
           return {
             name: item.name || 'Unknown Food',
             description: item.description || 'No description available',

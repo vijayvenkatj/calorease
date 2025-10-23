@@ -7,6 +7,7 @@ interface FormData {
   gender?: string
   weight?: string
   height?: string
+  region?: string
 }
 
 interface PersonalDataStepProps {
@@ -77,6 +78,22 @@ export default function PersonalDataStep({ formData, updateFormData, onNext, can
               <option value="other">Other</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <Label htmlFor="region">Region</Label>
+          <Input
+            id="region"
+            type="text"
+            placeholder="e.g., TamilNadu, Karnataka, Maharashtra"
+            value={formData.region}
+            onChange={(e) => handleChange('region', e.target.value)}
+            required
+            className="mt-1"
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            Your region helps us provide personalized dish recommendations
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
