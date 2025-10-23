@@ -65,6 +65,7 @@ export default function AddMealDialog({ onMealAdded }: AddMealDialogProps) {
         diet: formData.diet,
       })
     } catch (error) {
+      console.error('Error adding custom meal:', error)
       // Error handling is done in the mutation's onError callback
     }
   }
@@ -89,7 +90,7 @@ export default function AddMealDialog({ onMealAdded }: AddMealDialogProps) {
         <DialogHeader>
           <DialogTitle>Add Custom Meal</DialogTitle>
           <DialogDescription>
-            Add a new meal to the recommendation system. You'll be able to rate it immediately after adding.
+            Add a new meal to the recommendation system. You can rate it immediately after adding.
           </DialogDescription>
         </DialogHeader>
         

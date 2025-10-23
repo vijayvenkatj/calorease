@@ -56,7 +56,7 @@ export const recommendationsRouter = t.router({
         }
 
         // Make request to external API
-        const response = await fetch('http://localhost:8000/initial-recommendations', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/initial-recommendations`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ export const recommendationsRouter = t.router({
         }
 
         // Send request to external API
-        const response = await fetch('http://localhost:8000/items', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/items`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -296,8 +296,10 @@ export const recommendationsRouter = t.router({
           rating: Number(rating.rating),
         }))
 
+        console.log(JSON.stringify({meals, top_k: 5}))
+
         // Make request to external API
-        const response = await fetch('http://localhost:8000/recommendations', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/recommendations`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

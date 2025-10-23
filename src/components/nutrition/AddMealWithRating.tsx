@@ -116,7 +116,7 @@ export default function AddMealWithRating() {
               Rate Your New Meal
             </CardTitle>
             <CardDescription className="text-emerald-700 dark:text-emerald-300">
-              How would you rate "{mealToRate}"? (Optional - you can skip and rate later)
+              How would you rate &quot;{mealToRate}&quot;? (Optional - you can skip and rate later)
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">

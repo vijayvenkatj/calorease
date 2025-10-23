@@ -60,7 +60,7 @@ export default function DishRecommendationsSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {personalizedRecommendations.recommendations.map((recommendation: any) => (
+          {personalizedRecommendations.recommendations.map((recommendation: { name: string, similarity: number, health_score: number, calories: number, fat: number, carbs: number, protein: number, serving_scale: string, final_score: number }) => (
             <RecommendationCard
               key={recommendation.name}
               recommendation={recommendation}

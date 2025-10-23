@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     forwardFormData.append('file', file)
 
     // Forward the request to the Python service
-    const response = await fetch('http://localhost:8000/nutrition', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/nutrition`, {
       method: 'POST',
       body: forwardFormData,
     })
