@@ -35,7 +35,7 @@ export default function PersonalizedRecommendations({ analytics }: PersonalizedR
     <Card className="border-border bg-gradient-to-br from-emerald-500/5 to-green-500/5 dark:from-emerald-900/10 dark:to-green-900/10 hover:shadow-lg transition-shadow duration-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl">
-          <div className="p-2 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20">
+          <div className="p-2 rounded-lg text-slate-800 dark:text-white bg-emerald-500/10 dark:bg-emerald-500/20">
             <Target className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           Personalized Recommendations
