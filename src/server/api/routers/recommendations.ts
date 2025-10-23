@@ -21,6 +21,21 @@ export const recommendationsRouter = t.router({
           })
         }
 
+        // Check if user has any existing ratings
+        const existingRatings = await db.query.dishRatings.findMany({
+          where: (ratings, { eq }) => eq(ratings.userId, user.id),
+          limit: 1,
+        })
+
+        // If user has ratings, don't fetch initial recommendations
+        if (existingRatings.length > 0) {
+          return {
+            region: null,
+            dishes: [],
+            message: 'User already has ratings, skipping initial recommendations',
+          }
+        }
+
         // Get user's profile to fetch region
         const profile = await db.query.profiles.findFirst({
           where: (profiles, { eq }) => eq(profiles.id, user.id),
@@ -180,6 +195,152 @@ export const recommendationsRouter = t.router({
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Failed to fetch ratings',
+        })
+      }
+    }),
+
+  // Add a custom meal to the external recommendation system
+  addCustomMeal: t.procedure
+    .input(z.object({
+      name: z.string().min(1, 'Meal name is required').max(200),
+      ingredients: z.string().min(1, 'Ingredients are required').max(1000),
+      diet: z.enum(['veg', 'non-veg']),
+    }))
+    .mutation(async ({ input }) => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to add custom meals',
+          })
+        }
+
+        // Send request to external API
+        const response = await fetch('http://localhost:8000/items', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: input.name,
+            ingredients: input.ingredients,
+            diet: input.diet,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('External API error:', response.status, errorText)
+          
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to add meal to recommendation system: ${response.status}`,
+          })
+        }
+
+        const data = await response.json()
+        
+        return {
+          success: true,
+          mealName: input.name,
+          data: data,
+        }
+      } catch (error) {
+        console.error('Error adding custom meal:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to add custom meal',
+        })
+      }
+    }),
+
+  // Get personalized meal recommendations based on user's ratings
+  getPersonalizedRecommendations: t.procedure
+    .query(async () => {
+      try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in to get recommendations',
+          })
+        }
+
+        // Get all user ratings
+        const ratings = await db.query.dishRatings.findMany({
+          where: (ratings, { eq }) => eq(ratings.userId, user.id),
+          orderBy: (ratings, { desc }) => desc(ratings.updatedAt),
+        })
+
+        // If user has no ratings, return empty array
+        if (ratings.length === 0) {
+          return {
+            recommendations: [],
+            message: 'No ratings found. Rate some dishes to get personalized recommendations.',
+          }
+        }
+
+        // Format ratings for the API
+        const meals = ratings.map(rating => ({
+          name: rating.dishName,
+          rating: Number(rating.rating),
+        }))
+
+        // Make request to external API
+        const response = await fetch('http://localhost:8000/recommendations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            meals,
+            top_k: 5,
+          }),
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error('External API error:', response.status, errorText)
+          
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to fetch personalized recommendations: ${response.status}`,
+          })
+        }
+
+        const data = await response.json()
+        
+        if (!data.recommendations || !Array.isArray(data.recommendations)) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Invalid response format from recommendations service',
+          })
+        }
+
+        return {
+          recommendations: data.recommendations,
+          userRatingsCount: ratings.length,
+        }
+      } catch (error) {
+        console.error('Error fetching personalized recommendations:', error)
+        
+        if (error instanceof TRPCError) {
+          throw error
+        }
+        
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch personalized recommendations',
         })
       }
     }),

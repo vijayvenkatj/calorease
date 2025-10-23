@@ -30,10 +30,6 @@ export default async function NutritionPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Rate Your Regional Dishes</h3>
-                  <p className="text-sm text-muted-foreground">Help us personalize your recommendations</p>
-                </div>
                 <DishRecommendationsSection />
               </section>
 
@@ -46,11 +42,7 @@ export default async function NutritionPage() {
               <section>
                 <ImageFoodLogger />
               </section>
-
-              <section>
-                <MacroPieChartContainer />
-              </section>
-
+              
               <section>
                 <NutritionFactCard fact={funFact} />
               </section>
