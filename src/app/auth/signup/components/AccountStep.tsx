@@ -36,7 +36,7 @@ export default function AccountStep({ formData, updateFormData, onSubmit, isLoad
     updateFormData({ [field]: value })
   }
 
-  const getPasswordStrength = (password: string) => {
+  const getPasswordStrength = (password: string): number => {
     return passwordRequirements.filter(req => req.regex.test(password)).length
   }
 

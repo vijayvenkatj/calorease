@@ -240,6 +240,7 @@ export default function ImageFoodLogger() {
                       <div>
                         <h4 className="font-medium">{item.name}</h4>
                         <p className="text-sm text-gray-600">{item.description}</p>
+                        <p className="text-xs text-blue-600 font-medium">Quantity: {item.quantity}</p>
                       </div>
                       <Button
                         variant="ghost"
@@ -251,7 +252,18 @@ export default function ImageFoodLogger() {
                     </div>
 
                     {editingItem === item.id ? (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label htmlFor={`${item.id}-quantity`} className="text-xs">Quantity</Label>
+                          <Input
+                            id={`${item.id}-quantity`}
+                            type="number"
+                            step="0.1"
+                            value={item.quantity}
+                            onChange={(e) => handleItemEdit(item.id, 'quantity', Number(e.target.value))}
+                            className="h-8"
+                          />
+                        </div>
                         <div>
                           <Label htmlFor={`${item.id}-calories`} className="text-xs">Calories</Label>
                           <Input

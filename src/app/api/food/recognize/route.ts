@@ -8,6 +8,7 @@ interface FoodItem {
   protein_g: string
   fat_g: string
   calories_kcal: string
+  quantity: string
 }
 
 export async function POST(request: NextRequest) {
@@ -75,12 +76,12 @@ export async function POST(request: NextRequest) {
           return {
             name: item.name || 'Unknown Food',
             description: item.description || 'No description available',
-            quantity: 1,
+            quantity: item.quantity || 1,
             estimated_nutrition: {
-              carbohydrates_g: parseFloat(item.carbohydrates_g) || 0,
-              protein_g: parseFloat(item.protein_g) || 0,
-              fat_g: parseFloat(item.fat_g) || 0,
-              calories: parseFloat(item.calories_kcal) || 0,
+              carbohydrates_g: parseFloat(item.carbohydrates_g) * parseFloat(item.quantity) || 0,
+              protein_g: parseFloat(item.protein_g) * parseFloat(item.quantity) || 0,
+              fat_g: parseFloat(item.fat_g) * parseFloat(item.quantity) || 0,
+              calories: parseFloat(item.calories_kcal) * parseFloat(item.quantity) || 0,
             }
           }
       }),
@@ -91,6 +92,8 @@ export async function POST(request: NextRequest) {
         total_calories: parseFloat(data.totals.total_calories_kcal) || 0,
       }
     }
+
+    console.log(transformedData)
 
     return NextResponse.json(transformedData)
   } catch (error) {
